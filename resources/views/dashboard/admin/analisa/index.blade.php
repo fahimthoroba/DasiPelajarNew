@@ -54,7 +54,7 @@
 
         <!-- 2. SCHEDULER / DENSITY MAP (Heatmap) -->
         <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
-            <div class="flex items-center justify-between mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 border-b border-gray-100 dark:border-gray-700 pb-4">
                 <div>
                     <h3 class="font-bold text-gray-900 dark:text-white flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-500">grid_view</span>
@@ -63,22 +63,35 @@
                     <p class="text-xs text-gray-500 mt-1">Identifikasi minggu kosong untuk menjadwalkan program PC.</p>
                 </div>
                 
-                <div class="flex items-center gap-2 text-xs text-gray-500 border p-2 rounded-lg dark:border-gray-700">
-                    <span>Kosong</span>
-                    <div class="flex gap-1 items-center">
-                        <div class="w-3 h-3 rounded-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600" title="0 Program"></div>
-                        <div class="w-3 h-3 rounded-sm bg-emerald-200" title="1 Program"></div>
-                        <div class="w-3 h-3 rounded-sm bg-emerald-400" title="2 Program"></div>
-                        <div class="w-3 h-3 rounded-sm bg-emerald-600" title="3-4 Programs"></div>
-                        <div class="w-3 h-3 rounded-sm bg-rose-500" title="5+ Programs (Sangat Padat)"></div>
+                <div class="flex items-center gap-4">
+                    <!-- Year Filter -->
+                    <form action="{{ route('dashboard.admin.analisa.index') }}" method="GET">
+                        <select name="year" onchange="this.form.submit()" 
+                            class="text-sm border-gray-200 dark:border-gray-700 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 bg-gray-50 dark:bg-gray-900 cursor-pointer hover:bg-white transition-colors">
+                            @foreach($availableYears as $y)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>Tahun {{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+
+                    <!-- Legend -->
+                    <div class="hidden md:flex items-center gap-2 text-xs text-gray-500 border p-2 rounded-lg dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <span>Kosong</span>
+                        <div class="flex gap-1 items-center">
+                            <div class="w-3 h-3 rounded-sm bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600" title="0 Program"></div>
+                            <div class="w-3 h-3 rounded-sm bg-emerald-200" title="1 Program"></div>
+                            <div class="w-3 h-3 rounded-sm bg-emerald-400" title="2 Program"></div>
+                            <div class="w-3 h-3 rounded-sm bg-emerald-600" title="3-4 Programs"></div>
+                            <div class="w-3 h-3 rounded-sm bg-rose-500" title="5+ Programs (Sangat Padat)"></div>
+                        </div>
+                        <span>Padat</span>
                     </div>
-                    <span>Padat</span>
                 </div>
             </div>
 
             <div class="flex items-start overflow-x-auto pb-2">
                 <!-- Day Labels -->
-                <div class="flex flex-col gap-1 mr-2 mt-[18px]">
+                <div class="flex flex-col gap-1 mr-2 mt-[28px]">
                     <div class="h-3 w-4 text-[10px] text-gray-400 leading-3">M</div>
                     <div class="h-3 w-4 text-[10px] text-gray-400 leading-3">S</div>
                     <div class="h-3 w-4 text-[10px] text-gray-400 leading-3">S</div>
@@ -103,19 +116,19 @@
                                             @foreach($week as $day)
                                                 @if($day['isValid'])
                                                     <a href="{{ route('dashboard.admin.analisa.date', $day['raw_date']) }}" 
-                                                       class="w-3 h-3 rounded-sm cursor-pointer transition-all hover:scale-150 relative group block
+                                                       class="w-3 h-3 rounded-sm cursor-pointer transition-all hover:scale-125 relative group block
                                                         {{ $day['level'] === 0 ? 'bg-gray-100 dark:bg-gray-700' :
                                                         ($day['level'] === 1 ? 'bg-emerald-200' :
                                                         ($day['level'] === 2 ? 'bg-emerald-400' :
                                                         ($day['level'] === 3 ? 'bg-emerald-600' : 'bg-rose-500 shadow-sm shadow-rose-500/50'))) }}"
                                                     >
                                                         <!-- Tooltip -->
-                                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block z-[9999] whitespace-nowrap">
-                                                            <div class="bg-gray-900 text-white text-[10px] py-1 px-2 rounded shadow-lg relative">
-                                                                <span class="font-bold block">{{ $day['date'] }}</span>
-                                                                {{ $day['count'] }} Kegiatan
+                                                        <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-[9999] whitespace-nowrap">
+                                                            <div class="bg-gray-900 text-white text-[10px] leading-3 py-1 px-1.5 rounded shadow-sm relative">
+                                                                <span class="font-bold block mb-0.5">{{ $day['date'] }}</span>
+                                                                <span class="font-normal">{{ $day['count'] }} Kegiatan</span>
                                                                 <!-- Triangle -->
-                                                                <div class="w-2 h-2 bg-gray-900 absolute top-full left-1/2 -translate-x-1/2 -mt-1 rotate-45"></div>
+                                                                <div class="w-1.5 h-1.5 bg-gray-900 absolute top-full left-1/2 -translate-x-1/2 -mt-0.5 rotate-45"></div>
                                                             </div>
                                                         </div>
                                                     </a>
@@ -134,29 +147,42 @@
         </div>
 
         <!-- 3. GAP ANALYSIS (Charts) -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 3. GAP ANALYSIS (Charts) -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- By Department -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
                 <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <span class="material-symbols-outlined text-blue-500">pie_chart</span>
-                    Gap Analysis: Distribusi per Departemen
+                    Distribusi Departemen
                 </h3>
                 <div class="relative h-64">
                     <canvas id="deptChart"></canvas>
                 </div>
-                <p class="text-xs text-gray-500 mt-4 text-center">Menunjukkan departemen mana yang paling aktif dan paling pasif.</p>
+                <p class="text-xs text-gray-500 mt-4 text-center">Sebaran program kerja per departemen.</p>
             </div>
 
-            <!-- By Category -->
+            <!-- By Old Category -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
                 <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <span class="material-symbols-outlined text-pink-500">donut_small</span>
-                    Gap Analysis: Jenis Kegiatan
+                    Kategori (Lama)
                 </h3>
                 <div class="relative h-64">
                     <canvas id="catChart"></canvas>
                 </div>
-                 <p class="text-xs text-gray-500 mt-4 text-center">Proporsi jenis kegiatan yang telah dilaksanakan.</p>
+                 <p class="text-xs text-gray-500 mt-4 text-center">Berdasarkan kategori inputan manual.</p>
+            </div>
+
+            <!-- By New Category -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
+                <h3 class="font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-purple-500">donut_large</span>
+                    Jenis Kegiatan (Baru)
+                </h3>
+                <div class="relative h-64">
+                    <canvas id="newCatChart"></canvas>
+                </div>
+                 <p class="text-xs text-gray-500 mt-4 text-center">5 Kategori baru</p>
             </div>
         </div>
 
@@ -221,12 +247,28 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Register Plugin safely
+            if (typeof ChartDataLabels !== 'undefined') {
+                Chart.register(ChartDataLabels);
+            }
             
             // Data Arrays (IDs for clicking)
             const deptIds = @json($departemenIds);
             const catIds = @json($kategoriIds);
+            const newCatIds = @json($newCatIds);
+
+            // Helper: Generate Dynamic Colors
+            function generateColors(count) {
+                const colors = [];
+                for(let i=0; i<count; i++) {
+                    const hue = (i * 137.508) % 360; // Golden angle approximation
+                    colors.push(`hsla(${hue}, 70%, 60%, 1)`);
+                }
+                return colors;
+            }
 
             // 1. Dept Chart
             const ctxDept = document.getElementById('deptChart').getContext('2d');
@@ -246,7 +288,8 @@
                     maintainAspectRatio: false,
                     indexAxis: 'y', // Horizontal Bar
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        datalabels: { display: false }
                     },
                     scales: {
                         x: { beginAtZero: true }
@@ -264,39 +307,108 @@
                 }
             });
 
-            // 2. Category Chart
-            const ctxCat = document.getElementById('catChart').getContext('2d');
-            new Chart(ctxCat, {
-                type: 'doughnut',
-                data: {
-                    labels: @json($kategoriLabels),
-                    datasets: [{
-                        data: @json($kategoriData),
-                        backgroundColor: [
-                            '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#6366f1'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right' }
+            // 2. Category Chart (Old) - Dynamic Colors
+            const catCanvas = document.getElementById('catChart');
+            if (catCanvas) {
+                const catCount = @json(count($kategoriLabels));
+                const ctxCat = catCanvas.getContext('2d');
+                new Chart(ctxCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: @json($kategoriLabels),
+                        datasets: [{
+                            data: @json($kategoriData),
+                            backgroundColor: generateColors(catCount),
+                            borderWidth: 0
+                        }]
                     },
-                    cutout: '70%',
-                    onClick: (e, activeEls) => {
-                        if (activeEls.length > 0) {
-                            const index = activeEls[0].index;
-                            const id = catIds[index];
-                            if(id) window.location.href = "{{ route('dashboard.admin.analisa.index') }}/kategori/" + id;
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                position: 'right', 
+                                align: 'start',
+                                labels: { boxWidth: 12, font: { size: 10 } }
+                            },
+                            datalabels: { display: false } // Disable percentage labels overriding global default
+                        },
+                        cutout: '60%',
+                        onClick: (e, activeEls) => {
+                            if (activeEls.length > 0) {
+                                const index = activeEls[0].index;
+                                const id = catIds[index];
+                                if(id) window.location.href = "{{ route('dashboard.admin.analisa.index') }}/kategori/" + id;
+                            }
+                        },
+                        onHover: (event, chartElement) => {
+                            event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
                         }
-                    },
-                    onHover: (event, chartElement) => {
-                        event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
                     }
-                }
-            });
+                });
+            }
+
+            // 3. New Category Chart (Fixed 5 Types)
+            const newCatCanvas = document.getElementById('newCatChart');
+            if (newCatCanvas) {
+                const ctxNewCat = newCatCanvas.getContext('2d');
+                new Chart(ctxNewCat, {
+                    type: 'doughnut',
+                    data: {
+                        labels: @json($newCatLabels),
+                        datasets: [{
+                            data: @json($newCatData),
+                            backgroundColor: [
+                                '#F59E0B', // Amber (Kaderisasi)
+                                '#3B82F6', // Blue (Organisasi)
+                                '#10B981', // Emerald (Keagamaan)
+                                '#EC4899', // Pink (Minat Bakat)
+                                '#8B5CF6'  // Violet (Peringatan)
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                position: 'right', 
+                                align: 'start',
+                                labels: { boxWidth: 12, font: { size: 10 } }
+                            },
+                            tooltip: { enabled: true },
+                            datalabels: {
+                                color: '#fff',
+                                anchor: 'center',
+                                align: 'center',
+                                font: { weight: 'bold', size: 11 },
+                                formatter: (value, ctx) => {
+                                    let sum = 0;
+                                    let dataArr = ctx.chart.data.datasets[0].data;
+                                    dataArr.map(data => { sum += Number(data); });
+                                    let percentage = (value*100 / sum).toFixed(1) + "%";
+                                    return percentage;
+                                },
+                                display: (context) => {
+                                    return context.dataset.data[context.dataIndex] > 0;
+                                }
+                            }
+                        },
+                        cutout: '50%',
+                        onClick: (e, activeEls) => {
+                            if (activeEls.length > 0) {
+                                const index = activeEls[0].index;
+                                const id = newCatIds[index];
+                                if(id) window.location.href = "{{ route('dashboard.admin.analisa.index') }}/kategori-baru/" + id;
+                            }
+                        },
+                        onHover: (event, chartElement) => {
+                            event.native.target.style.cursor = chartElement[0] ? 'pointer' : 'default';
+                        }
+                    }
+                });
+            }
         });
     </script>
 @endsection

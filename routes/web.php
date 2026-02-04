@@ -101,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/analisa/date/{date}', [\App\Http\Controllers\Admin\AnalisaController::class, 'programsByDate'])->name('analisa.date');
         Route::get('/analisa/departemen/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'programsByDepartemen'])->name('analisa.departemen');
         Route::get('/analisa/kategori/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'programsByKategori'])->name('analisa.kategori');
+        Route::get('/analisa/kategori-baru/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'programsByKategoriBaru'])->name('analisa.kategori_baru');
         Route::get('/analisa/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'detail'])->name('analisa.detail');
         Route::resource('pac', \App\Http\Controllers\Admin\PacManagementController::class);
     });

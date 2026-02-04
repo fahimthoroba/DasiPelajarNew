@@ -50,7 +50,7 @@
 
         <!-- Sidebar -->
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 shadow-xl"
+            class="hidden lg:flex flex-col w-64 bg-emerald-900 text-white shadow-xl h-screen sticky top-0 overflow-y-auto z-50 transition-all duration-300"
             :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}">
 
             <!-- Logo -->
@@ -65,13 +65,15 @@
             <!-- Menu -->
             <nav class="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
 
-                <p class="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Main</p>
+                @if(auth()->user()->role !== 'dep_organisasi')
+                    <p class="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Main</p>
 
-                <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                    <span class="material-symbols-outlined">dashboard</span>
-                    <span class="font-medium">Dashboard</span>
-                </a>
+                    <a href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
+                        <span class="material-symbols-outlined">dashboard</span>
+                        <span class="font-medium">Dashboard</span>
+                    </a>
+                @endif
 
                 @if(in_array(auth()->user()->role, ['admin']))
                     <a href="{{ route('dashboard.pengaturan.index') }}"

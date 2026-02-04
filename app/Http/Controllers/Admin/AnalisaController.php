@@ -13,21 +13,36 @@ use App\Models\KategoriProgram;
 
 class AnalisaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // 0. Filter Tahun (Default: Tahun Ini)
+        $year = $request->input('year', now()->year);
+        
+        // Ambil semua tahun yang ada di database untuk dropdown
+        $availableYears = RealisasiProgram::selectRaw('YEAR(tgl_mulai) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
+
+        // Jika tahun berjalan belum ada di DB (misal awal tahun belum ada proker), tetap munculkan
+        if (!in_array(now()->year, $availableYears)) {
+            array_unshift($availableYears, now()->year);
+        }
+
         // 1. Kartu Statistik Utama
-        $totalProgram = RealisasiProgram::count();
+        $totalProgram = RealisasiProgram::count(); // Total seumur hidup
         $programTerlaksana = RealisasiProgram::where('status', 'Terlaksana')->count();
         $programBulanIni = RealisasiProgram::whereMonth('tgl_mulai', now()->month)
-            ->whereYear('tgl_mulai', now()->year)
+            ->whereYear('tgl_mulai', now()->year) // Tetap bulan ini di tahun berjalan (real-time)
             ->count();
 
-        // 2. Grafik Bulanan (Tahun Ini)
+        // 2. Grafik Bulanan (Sesuai Tahun Dipilih)
         $monthlyStats = RealisasiProgram::select(
             DB::raw('MONTH(tgl_mulai) as month'),
             DB::raw('COUNT(*) as count')
         )
-            ->whereYear('tgl_mulai', now()->year)
+            ->whereYear('tgl_mulai', $year) // Updated filter
             ->groupBy('month')
             ->orderBy('month')
             ->pluck('count', 'month')
@@ -38,8 +53,7 @@ class AnalisaController extends Controller
             $chartData[] = $monthlyStats[$i] ?? 0;
         }
 
-        // 3. Peringkat PAC Teraktif & All PAC List (Data Table)
-        // Kita ambil semua PAC dengan count proker mereka
+        // 3. Peringkat PAC (Global / All Time) - Bisa diubah jika mau per tahun
         $allPacs = User::where('role', 'pac')
             ->withCount('realisasiPrograms as proker_count')
             ->with(['realisasiPrograms' => function ($q) {
@@ -58,46 +72,71 @@ class AnalisaController extends Controller
         $top5Pacs = $allPacs->take(5);
 
 
-        // 4. GAP ANALYSIS: Distribusi per Kategori
+        // 4. GAP ANALYSIS: Distribusi per Kategori (Global/All Time - atau mau per tahun?)
+        // Biasanya Gap Analysis itu "Potret Saat Ini" atau "Total Kinerja". 
+        // Untuk Heatmap yang spesifik per tahun, kita biarkan ini Global dulu atau filter $year juga?
+        // User request spesifik Heatmap, tapi grafik bulanan pasti ikut tahun.
+        // Mari kita buat Gap Analysis juga ikut Tahun agar sinkron.
         $programsPerKategori = RealisasiProgram::join('kategori_program', 'realisasi_program.kategori_program_id', '=', 'kategori_program.id')
-            ->select('kategori_program.nama_kategori', DB::raw('count(*) as total'))
-            ->groupBy('kategori_program.nama_kategori', 'kategori_program.id') // Group by ID to be safe
+            ->whereYear('realisasi_program.tgl_mulai', $year) // Added filter
+            ->select('kategori_program.nama_kategori', DB::raw('count(*) as total'), 'kategori_program.id as cat_id')
+            ->groupBy('kategori_program.nama_kategori', 'kategori_program.id')
             ->get();
             
         $kategoriLabels = $programsPerKategori->pluck('nama_kategori');
         $kategoriData = $programsPerKategori->pluck('total');
-        $kategoriIds = $programsPerKategori->pluck('id');
+        $kategoriIds = $programsPerKategori->pluck('cat_id');
 
         // 5. GAP ANALYSIS: Distribusi per Departemen
-        // Menggunakan kolom departemen_id langsung di realisasi_program
         $programsPerDepartemen = RealisasiProgram::join('departemens', 'realisasi_program.departemen_id', '=', 'departemens.id')
-            ->select('departemens.nama_departemen', DB::raw('count(*) as total'), 'departemens.id')
+            ->whereYear('realisasi_program.tgl_mulai', $year) // Added filter
+            ->select('departemens.nama_departemen', DB::raw('count(*) as total'), 'departemens.id as dept_id')
             ->groupBy('departemens.nama_departemen', 'departemens.id')
+            ->orderBy('total', 'asc')
             ->get();
 
         $departemenLabels = $programsPerDepartemen->pluck('nama_departemen');
         $departemenData = $programsPerDepartemen->pluck('total');
-        $departemenIds = $programsPerDepartemen->pluck('id');
+        $departemenIds = $programsPerDepartemen->pluck('dept_id');
+
+        // 7. GAP ANALYSIS: Kategori Baru (1-5)
+        $programsPerNewCat = RealisasiProgram::whereYear('tgl_mulai', $year)
+            ->select('id_kategori_baru', DB::raw('count(*) as total'))
+            ->groupBy('id_kategori_baru')
+            ->get();
+
+        $newCatMapping = [
+            1 => 'Kaderisasi & Pengembangan SDM',
+            2 => 'Organisasi & Administrasi',
+            3 => 'Keagamaan & Sosial',
+            4 => 'Minat Bakat & Kreativitas',
+            5 => 'Peringatan & Apresiasi'
+        ];
+
+        $newCatLabels = [];
+        $newCatData = [];
+        $newCatIds = [];
+
+        // Ensure all 5 categories are present even if 0
+        foreach ($newCatMapping as $id => $label) {
+            $count = $programsPerNewCat->where('id_kategori_baru', $id)->first()->total ?? 0;
+            $newCatLabels[] = $label;
+            $newCatData[] = $count;
+            $newCatIds[] = $id;
+        }
 
 
-        // 6. Calendar Heatmap Data (GitHub Style) - Enhanced for Density Analysis
-        $year = now()->year;
+        // 6. Calendar Heatmap Data (GitHub Style) - Filtered by Year
         $dailyCounts = RealisasiProgram::join('users', 'realisasi_program.pac_id', '=', 'users.id')
             ->select(
                 DB::raw('DATE(realisasi_program.tgl_mulai) as date'),
                 DB::raw('COUNT(*) as count')
             )
             ->where('users.role', 'pac')
-            ->whereYear('realisasi_program.tgl_mulai', $year)
+            ->whereYear('realisasi_program.tgl_mulai', $year) // Updated filter
             ->groupBy('date')
             ->pluck('count', 'date')
             ->toArray();
-
-        // Put the rest of heatmap logic here if not replacing whole block...
-        // Actually, I can just replace the return statement to include new vars
-        // But I need to define them first.
-        // Let's replace the block from Gap Analysis to Return.
-
 
         // Calculate max density for scaling colors if needed, or use fixed levels
         $maxDaily = empty($dailyCounts) ? 1 : max($dailyCounts);
@@ -122,11 +161,6 @@ class AnalisaController extends Controller
                 $count = $dailyCounts[$dateString] ?? 0;
 
                 // Determine Density Level (0-4)
-                // 0: Empty
-                // 1: 1 Event (Low)
-                // 2: 2 Events (Medium)
-                // 3: 3-4 Events (High)
-                // 4: 5+ Events (Very High - "Bentrok Potensial")
                 $level = 0;
                 if ($count > 0) $level = 1;
                 if ($count >= 2) $level = 2;
@@ -167,15 +201,19 @@ class AnalisaController extends Controller
             'programBulanIni',
             'chartData',
             'top5Pacs',
-            'allPacs',          // New: Full List
-            'kategoriLabels',   // New: Gap Analysis
-            'kategoriData',     // New: Gap Analysis
-            'kategoriIds',      // New: Interactivity
-            'departemenLabels', // New: Gap Analysis
-            'departemenData',   // New: Gap Analysis
-            'departemenIds',    // New: Interactivity
+            'allPacs',
+            'kategoriLabels',
+            'kategoriData',
+            'kategoriIds',
+            'newCatLabels',     // New: New Cat Analysis
+            'newCatData',       // New: New Cat Analysis
+            'newCatIds',        // New: New Cat Analysis
+            'departemenLabels',
+            'departemenData',
+            'departemenIds',
             'calendarData',
-            'year'
+            'year',
+            'availableYears'    // New Param
         ));
     }
 
@@ -217,6 +255,28 @@ class AnalisaController extends Controller
             ->paginate(20);
 
         $title = "Kegiatan Kategori: " . $kategori->nama_kategori;
+
+        return view('dashboard.admin.analisa.list', compact('programs', 'title'));
+    }
+
+    public function programsByKategoriBaru($id)
+    {
+        $mapping = [
+            1 => 'Kaderisasi & Pengembangan SDM',
+            2 => 'Organisasi & Administrasi',
+            3 => 'Keagamaan & Sosial',
+            4 => 'Minat Bakat & Kreativitas',
+            5 => 'Peringatan & Apresiasi'
+        ];
+
+        $namaKategori = $mapping[$id] ?? 'Kategori Tidak Dikenal';
+
+        $programs = RealisasiProgram::with(['pac', 'kategori', 'departemen'])
+            ->where('id_kategori_baru', $id)
+            ->latest('tgl_mulai')
+            ->paginate(20);
+
+        $title = "Kegiatan Jenis: " . $namaKategori;
 
         return view('dashboard.admin.analisa.list', compact('programs', 'title'));
     }
