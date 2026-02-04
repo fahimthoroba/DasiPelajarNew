@@ -50,7 +50,7 @@
 
         <!-- Sidebar -->
         <aside
-            class="hidden lg:flex flex-col w-64 bg-emerald-900 text-white shadow-xl h-screen sticky top-0 overflow-y-auto z-50 transition-all duration-300 lg:translate-x-0"
+            class="fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white shadow-xl transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-auto lg:flex lg:flex-col lg:h-screen lg:sticky lg:top-0 lg:overflow-y-auto"
             :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}">
 
             <!-- Logo -->

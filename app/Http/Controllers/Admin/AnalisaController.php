@@ -281,55 +281,80 @@ class AnalisaController extends Controller
         return view('dashboard.admin.analisa.list', compact('programs', 'title'));
     }
 
-    public function detail($id)
-    {
-        $pac = User::findOrFail($id);
-        
-        if ($pac->role !== 'pac') {
-            abort(404);
-        }
-
-        $totalProker = $pac->realisasiPrograms()->count();
-        $prokerTerlaksana = $pac->realisasiPrograms()->where('status', 'Terlaksana')->count();
-
-        $monthlyStats = $pac->realisasiPrograms()
-            ->select(
-                DB::raw('MONTH(tgl_mulai) as month'),
-                DB::raw('COUNT(*) as count')
-            )
-            ->whereYear('tgl_mulai', now()->year)
-            ->groupBy('month')
-            ->pluck('count', 'month')
-            ->toArray();
-
-        $chartData = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $chartData[] = $monthlyStats[$i] ?? 0;
-        }
-
-        $programsPerKategori = $pac->realisasiPrograms()
-            ->join('kategori_program', 'realisasi_program.kategori_program_id', '=', 'kategori_program.id')
-            ->select('kategori_program.nama_kategori', DB::raw('count(*) as total'))
-            ->groupBy('kategori_program.nama_kategori')
-            ->get();
-        
-        $kategoriLabels = $programsPerKategori->pluck('nama_kategori');
-        $kategoriData = $programsPerKategori->pluck('total');
-
-        // Recent Activity
-        $recentProkers = $pac->realisasiPrograms()
-            ->with(['kategori', 'departemen'])
-            ->latest('tgl_mulai')
-            ->take(10)
-            ->get();
-
-        return view('dashboard.admin.analisa.show', compact(
-            'pac',
-            'totalProker',
-            'chartData',
-            'kategoriLabels',
-            'kategoriData',
-            'recentProkers'
-        ));
+    public function detail(Request $request, $id)
+{
+    $pac = User::findOrFail($id);
+    
+    if ($pac->role !== 'pac') {
+        abort(404);
     }
+
+    // Year Filter
+    $availableYears = RealisasiProgram::selectRaw('YEAR(tgl_mulai) as year')
+        ->distinct()
+        ->orderBy('year', 'desc')
+        ->pluck('year')
+        ->toArray();
+
+    // Add current year if empty or not present (optional)
+    if (empty($availableYears)) {
+        $availableYears = [now()->year];
+    }
+    
+    $year = $request->input('year', now()->year);
+
+    // Filter Stats based on Year? 
+    // Usually 'Total Program' is all time, but 'Tren Bulanan' is specific year.
+    // Let's make Monthly Stats year-specific.
+    // OPTIONAL: Filter Total Program by year too? 
+    // User asked "Tren keaktifan bulanan... bisa dipilih tahun".
+    // I will keep Total Proker and Recent Activity as "All Time" (or maybe Recent is just recent).
+    // But definitely filter Monthly Stats by $year.
+
+    $totalProker = $pac->realisasiPrograms()->count(); // All time
+    // $prokerTerlaksana = $pac->realisasiPrograms()->where('status', 'Terlaksana')->count(); // Unused variable?
+
+    $monthlyStats = $pac->realisasiPrograms()
+        ->select(
+            DB::raw('MONTH(tgl_mulai) as month'),
+            DB::raw('COUNT(*) as count')
+        )
+        ->whereYear('tgl_mulai', $year) // Filter by Selected Year
+        ->groupBy('month')
+        ->pluck('count', 'month')
+        ->toArray();
+
+    $chartData = [];
+    for ($i = 1; $i <= 12; $i++) {
+        $chartData[] = $monthlyStats[$i] ?? 0;
+    }
+
+    $programsPerKategori = $pac->realisasiPrograms()
+        ->join('kategori_program', 'realisasi_program.kategori_program_id', '=', 'kategori_program.id')
+        ->select('kategori_program.nama_kategori', DB::raw('count(*) as total'))
+        ->groupBy('kategori_program.nama_kategori')
+        ->whereYear('realisasi_program.tgl_mulai', $year) // Make category chart also year-specific? User didn't explicitly ask, but it makes sense for "Analysis". Let's stick to Monthly Chart for now or do both? Usually dashboard is "Yearly View". I'll filter Category by Year too for consistency.
+        ->get();
+    
+    $kategoriLabels = $programsPerKategori->pluck('nama_kategori');
+    $kategoriData = $programsPerKategori->pluck('total');
+
+    // Recent Activity (Keep it truly recent/latest, regardless of year filter? Or filter by year? "Recent" usually means latest. I'll keep it latest all time.)
+    $recentProkers = $pac->realisasiPrograms()
+        ->with(['kategori', 'departemen'])
+        ->latest('tgl_mulai')
+        ->take(10)
+        ->get();
+
+    return view('dashboard.admin.analisa.show', compact(
+        'pac',
+        'totalProker',
+        'chartData',
+        'kategoriLabels',
+        'kategoriData',
+        'recentProkers',
+        'availableYears',
+        'year'
+    ));
+}
 }

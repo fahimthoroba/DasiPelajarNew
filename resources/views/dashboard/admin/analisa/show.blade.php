@@ -64,7 +64,16 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Monthly Activity -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
-                <h3 class="font-bold text-gray-900 dark:text-white mb-6">Tren Keaktifan Bulanan</h3>
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="font-bold text-gray-900 dark:text-white">Tren Keaktifan Bulanan</h3>
+                    <form action="" method="GET">
+                        <select name="year" onchange="this.form.submit()" class="text-sm border-gray-200 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
+                            @foreach($availableYears as $y)
+                                <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
                 <div class="h-64 relative">
                     <canvas id="monthlyChart"></canvas>
                 </div>
