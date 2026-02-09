@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('realisasi_program', function (Blueprint $table) {
-            $table->integer('id_kategori_baru')->nullable()->default(null)->after('kategori_program_id');
-        });
+        if (!Schema::hasColumn('realisasi_program', 'id_kategori_baru')) {
+            Schema::table('realisasi_program', function (Blueprint $table) {
+                $table->integer('id_kategori_baru')->nullable()->default(null)->after('kategori_program_id');
+            });
+        }
     }
 
     /**
