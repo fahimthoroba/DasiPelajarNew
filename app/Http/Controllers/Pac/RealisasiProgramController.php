@@ -79,7 +79,7 @@ class RealisasiProgramController extends Controller
         \App\Models\RealisasiProgram::create([
             'pac_id' => auth()->id(),
             'kategori_program_id' => $kategoriId,
-            'departemen_id' => $request->departemen_id, // NEW: Direct Save
+            'departemen_id' => $request->departemen_id,
             'nama_lokal' => $request->nama_lokal,
             'tgl_mulai' => $request->tgl_mulai,
             'tgl_selesai' => $request->tgl_selesai,
@@ -124,7 +124,7 @@ class RealisasiProgramController extends Controller
 
         $request->validate([
             'nama_lokal' => 'required|string|max:255',
-            'departemen_id' => 'nullable|exists:departemens,id', // Optional on edit normally
+            'departemen_id' => 'nullable|exists:departemens,id',
             'kategori_program_id' => 'required|exists:kategori_program,id',
             'tgl_mulai' => 'required|date',
             'tgl_selesai' => 'required|date|after_or_equal:tgl_mulai',
@@ -138,7 +138,7 @@ class RealisasiProgramController extends Controller
 
         $program->update([
             'kategori_program_id' => $request->kategori_program_id,
-            'departemen_id' => $request->departemen_id, // NEW: Direct Update
+            'departemen_id' => $request->departemen_id,
             'nama_lokal' => $request->nama_lokal,
             'tgl_mulai' => $request->tgl_mulai,
             'tgl_selesai' => $request->tgl_selesai,
