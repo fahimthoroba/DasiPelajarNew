@@ -16,13 +16,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
     <!-- Styles -->
-    <!-- Styles -->
-    <!-- Production: Uncomment the line below after running 'npm run build' -->
-    <!-- PRODUCTION NOTE: To enable Vite, uncomment the directive and run 'npm run build' -->
-    <!-- (Add the vite directive here for resources/css/app.css and resources/js/app.js) -->
-
-    <!-- Temporary CDN for Instant Preview (Uncomment vite directive above and run 'npm run build' for production) -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -97,7 +91,7 @@
             class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-amber-50 dark:bg-amber-900/20 rounded-full blur-3xl opacity-60 translate-y-1/2 -translate-x-1/4">
         </div>
 
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10" data-aos="fade-up">
             <div class="text-center max-w-4xl mx-auto">
                 <span
                     class="inline-block py-1 px-3 rounded-full bg-gold-500/10 dark:bg-gold-500/20 text-gold-600 dark:text-gold-400 text-xs font-bold tracking-widest uppercase mb-6 border border-gold-500/20">

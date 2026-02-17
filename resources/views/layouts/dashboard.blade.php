@@ -15,7 +15,7 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
     <!-- Tailwind -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -268,7 +268,7 @@
             </header>
 
             <!-- Content Body -->
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-surface-light dark:bg-[#051111] p-4 lg:p-8">
+            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-surface-light dark:bg-[#051111] p-4 lg:p-8" data-aos="fade-in">
                 @yield('content')
             </main>
 

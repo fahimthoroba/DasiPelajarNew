@@ -19,9 +19,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production') || env('FORCE_HTTPS', false)) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
-        }
+        // if (app()->environment('production') || env('FORCE_HTTPS', false)) {
+        //     \Illuminate\Support\Facades\URL::forceScheme('https');
+        // }
         // Share Site Settings to all views
         try {
             $pengaturan = \App\Models\PengaturanWeb::first();
