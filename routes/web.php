@@ -14,10 +14,7 @@ use App\Http\Controllers\KategoriAdminController;
 use App\Http\Controllers\SliderAdminController;
 use App\Http\Controllers\PengaturanWebAdminController;
 
-//Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/berita', [\App\Http\Controllers\HomeController::class, 'indexBerita'])->name('berita.index');
 Route::get('/berita/{slug}', [\App\Http\Controllers\HomeController::class, 'showBerita'])->name('berita.show');
 Route::get('/struktur-organisasi', [\App\Http\Controllers\HomeController::class, 'struktur'])->name('struktur-organisasi');

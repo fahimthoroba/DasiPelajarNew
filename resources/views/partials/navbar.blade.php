@@ -92,7 +92,7 @@
             class="block px-4 py-3 rounded-xl {{ request()->routeIs('layanan') ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-400 font-bold' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5' }}">
             Layanan
         </a>
-        <a href="/admin"
+        <a href="{{ route('login') }}"
             class="block w-full text-center px-6 py-3 bg-emerald-800 text-white rounded-xl font-bold hover:bg-emerald-900">
             Login Pengurus
         </a>
