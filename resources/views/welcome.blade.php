@@ -455,13 +455,13 @@
                     </svg></a>
             </div>
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full overflow-hidden marquee-container">
-                <div class="flex gap-6 animate-marquee">
-                    {{-- Loop multipel kali untuk seamless --}}
-                    @for ($i = 0; $i < 4; $i++)
-                        @forelse($pengurusIpnu as $p)
+            <!-- IPNU Swiper -->
+            <div class="swiper mySwiper-ipnu w-full px-4 pb-12">
+                <div class="swiper-wrapper">
+                    @forelse($pengurusIpnu as $p)
+                        <div class="swiper-slide w-[300px]">
                             <div
-                                class="flex flex-col gap-3 bg-surface-light dark:bg-gray-800 border border-gray-100 dark:border-white/10 rounded-xl p-4 hover:border-emerald-200 dark:hover:border-emerald-500/50 hover:shadow-lg transition-all w-[300px] shrink-0 group h-full">
+                                class="flex flex-col gap-3 bg-surface-light dark:bg-gray-800 border border-gray-100 dark:border-white/10 rounded-xl p-4 hover:border-emerald-200 dark:hover:border-emerald-500/50 hover:shadow-lg transition-all h-full group">
                                 <div class="flex items-center gap-4">
                                     <div
                                         class="w-14 h-14 rounded-full overflow-hidden border-2 border-emerald-100 dark:border-emerald-800 group-hover:border-emerald-500 transition-colors shrink-0">
@@ -493,12 +493,12 @@
                                     </div>
                                 @endif
                             </div>
-                        @empty
-                            @if($i == 0)
-                            <div class="text-gray-400 italic px-8">Data Pengurus Sedang Diupdate.</div>@endif
-                        @endforelse
-                    @endfor
+                        </div>
+                    @empty
+                        <div class="swiper-slide w-full text-center text-gray-400 italic">Data Pengurus Sedang Diupdate.</div>
+                    @endforelse
                 </div>
+                <div class="swiper-pagination"></div>
             </div>
         </div>
 
@@ -518,13 +518,13 @@
                     </svg></a>
             </div>
 
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full overflow-hidden marquee-container" dir="ltr">
-                <!-- Apply flex-row-reverse so the First Item (Ketua) is visually at the Right End, leading the Rightward march -->
-                <div class="flex flex-row-reverse gap-6 animate-marquee-reverse">
-                    @for ($i = 0; $i < 4; $i++)
-                        @forelse($pengurusIppnu as $p)
-                            <div class="flex flex-col gap-3 bg-surface-light dark:bg-gray-800 border border-gray-100 dark:border-white/10 rounded-xl p-4 hover:border-amber-200 dark:hover:border-amber-500/50 hover:shadow-lg transition-all w-[300px] shrink-0 group text-left"
-                                dir="ltr">
+            <!-- IPPNU Swiper -->
+            <div class="swiper mySwiper-ippnu w-full px-4 pb-12">
+                <div class="swiper-wrapper">
+                    @forelse($pengurusIppnu as $p)
+                        <div class="swiper-slide w-[300px]">
+                            <div
+                                class="flex flex-col gap-3 bg-surface-light dark:bg-gray-800 border border-gray-100 dark:border-white/10 rounded-xl p-4 hover:border-amber-200 dark:hover:border-amber-500/50 hover:shadow-lg transition-all h-full group">
                                 <div class="flex items-center gap-4">
                                     <div
                                         class="w-14 h-14 rounded-full overflow-hidden border-2 border-amber-100 dark:border-amber-800 group-hover:border-amber-500 transition-colors shrink-0">
@@ -537,7 +537,8 @@
                                             class="text-gray-900 dark:text-white font-bold text-base leading-tight font-display">
                                             {{ \Illuminate\Support\Str::words($p->kader->nama_lengkap, 2, '') }}
                                         </h5>
-                                        <p class="text-amber-600 dark:text-amber-500 text-xs font-bold uppercase tracking-wide">
+                                        <p
+                                            class="text-amber-600 dark:text-amber-500 text-xs font-bold uppercase tracking-wide">
                                             {{ $p->jabatan }}
                                         </p>
                                     </div>
@@ -554,12 +555,12 @@
                                     </div>
                                 @endif
                             </div>
-                        @empty
-                            @if($i == 0)
-                            <div class="text-gray-400 italic px-8" dir="ltr">Data Pengurus Sedang Diupdate.</div>@endif
-                        @endforelse
-                    @endfor
+                        </div>
+                    @empty
+                        <div class="swiper-slide w-full text-center text-gray-400 italic">Data Pengurus Sedang Diupdate.</div>
+                    @endforelse
                 </div>
+                <div class="swiper-pagination"></div>
             </div>
         </div>
     </section>
@@ -568,7 +569,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     <script>
-        var swiper = new Swiper(".mySwiper", {
+        var heroSwiper = new Swiper(".mySwiper", {
             spaceBetween: 0,
             centeredSlides: true,
             effect: "fade",
@@ -583,6 +584,60 @@
             navigation: {
                 nextEl: ".swiper-button-next",
                 prevEl: ".swiper-button-prev",
+            },
+        });
+
+        var ipnuSwiper = new Swiper(".mySwiper-ipnu", {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            autoplay: {
+                delay: 2000,
+                disableOnInteraction: false,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 3,
+                    spaceBetween: 30,
+                },
+                1024: {
+                    slidesPerView: 4,
+                    spaceBetween: 30,
+                },
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+            },
+        });
+
+        var ippnuSwiper = new Swiper(".mySwiper-ippnu", {
+            slidesPerView: 1,
+            spaceBetween: 20,
+            autoplay: {
+                delay: 2500, // Slightly different speed for visual variety
+                disableOnInteraction: false,
+            },
+            breakpoints: {
+                640: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 3,
+                    spaceBetween: 30,
+                },
+                1024: {
+                    slidesPerView: 4,
+                    spaceBetween: 30,
+                },
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
             },
         });
     </script>

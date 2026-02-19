@@ -33,514 +33,329 @@
             }
         }
     </script>
-    <style>
-        /* --- CSS KHUSUS UNTUK TREE --- */
+            <style>
+                /* --- FIXED HIERARCHICAL CSS --- */
+                .org-tree ul {
+                    padding-top: 20px;
+                    position: relative;
+                    transition: all 0.5s;
+                    display: flex;
+                    justify-content: center;
+                }
 
-        /* 1. Horizontal Tree (Untuk Wakil Ketua & Koordinator) */
-        .tree ul {
-            padding-top: 20px;
-            position: relative;
-            transition: all 0.5s;
-            display: flex;
-            justify-content: center;
-        }
+                .org-tree li {
+                    float: left;
+                    text-align: center;
+                    list-style-type: none;
+                    position: relative;
+                    padding: 20px 10px 0 10px;
+                    transition: all 0.5s;
+                }
 
-        .tree li {
-            float: left;
-            text-align: center;
-            list-style-type: none;
-            position: relative;
-            padding: 20px 10px 0 10px;
-            transition: all 0.5s;
-        }
+                /* Connectors */
+                .org-tree li::before,
+                .org-tree li::after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    right: 50%;
+                    border-top: 2px solid #cbd5e1;
+                    width: 50%;
+                    height: 20px;
+                }
 
-        /* Garis Konektor Horizontal */
-        .tree li::before,
-        .tree li::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 50%;
-            border-top: 2px solid #cbd5e1;
-            width: 50%;
-            height: 20px;
-        }
+                .org-tree li::after {
+                    right: auto;
+                    left: 50%;
+                    border-left: 2px solid #cbd5e1;
+                }
 
-        .tree li::after {
-            right: auto;
-            left: 50%;
-            border-left: 2px solid #cbd5e1;
-        }
+                .org-tree li:only-child::after,
+                .org-tree li:only-child::before {
+                    display: none;
+                }
+                
+                .org-tree li:only-child { 
+                    padding-top: 0;
+                }
 
-        .tree li:only-child::after,
-        .tree li:only-child::before {
-            display: none;
-        }
+                .org-tree li:first-child::before,
+                .org-tree li:last-child::after {
+                    border: 0 none;
+                }
 
-        .tree li:only-child {
-            padding-top: 0;
-        }
+                .org-tree li:last-child::before {
+                    border-right: 2px solid #cbd5e1;
+                    border-radius: 0 5px 0 0;
+                }
 
-        .tree li:first-child::before,
-        .tree li:last-child::after {
-            border: 0 none;
-        }
+                .org-tree li:first-child::after {
+                    border-radius: 5px 0 0 0;
+                }
 
-        .tree li:last-child::before {
-            border-right: 2px solid #e1cbcbff;
-            border-radius: 0 5px 0 0;
-        }
+                /* Downward line from parent */
+                .org-tree ul ul::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    border-left: 2px solid #cbd5e1;
+                    width: 0;
+                    height: 20px;
+                }
 
-        .tree li:first-child::after {
-            border-radius: 5px 0 0 0;
-        }
+                /* Vertical Stack (For Deputies) */
+                .deputy-stack {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    position: relative;
+                    margin-top: 20px;
+                }
+                
+                .deputy-stack::before {
+                    content: '';
+                    position: absolute;
+                    top: -20px;
+                    left: 50%;
+                    width: 0;
+                    height: 20px;
+                    border-left: 2px solid #cbd5e1;
+                }
 
-        .tree ul ul::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            border-left: 2px solid #e1cbcbff;
-            width: 0;
-            height: 20px;
-        }
+                .deputy-item {
+                    position: relative;
+                    padding-top: 10px;
+                }
+                
+                .deputy-item::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 50%;
+                    width: 0;
+                    height: 10px;
+                    border-left: 2px solid #cbd5e1; /* Connect to item above */
+                }
 
-        /* 2. Vertical Left-Line Tree (Untuk Wakil Sekretaris & Anggota Lembaga) 
-           Style: Garis lurus di kiri, anak cabang ke kanan */
-        .vertical-left-tree {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* Rata Kiri */
-            position: relative;
-            padding-left: 20px;
-            /* Space untuk garis vertikal */
-            margin-top: 10px;
-        }
+                /* Card Styles */
+                .org-card {
+                    background: white;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
+                    padding: 8px;
+                    width: 140px;
+                    margin: 0 auto;
+                    position: relative;
+                    z-index: 10;
+                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    transition: transform 0.2s;
+                    cursor: pointer;
+                }
 
-        /* Garis Utama Vertikal di Kiri */
-        .vertical-left-tree::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 10px;
-            /* Posisi garis */
-            height: 100%;
-            border-left: 2px solid #cbd5e1;
-            z-index: 0;
-        }
+                .org-card:hover {
+                    transform: translateY(-5px);
+                    border-color: #10b981;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                }
 
-        /* Item List */
-        .v-item {
-            position: relative;
-            margin-bottom: 10px;
-            width: 100%;
-        }
+                :is(.dark .org-card) {
+                    background-color: #1f2937;
+                    border-color: rgba(255, 255, 255, 0.1);
+                }
 
-        /* Garis Cabang Horizontal Kecil ke Kartu */
-        .v-item::before {
-            content: '';
-            position: absolute;
-            top: 24px;
-            /* Tengah-tengah kartu kecil */
-            left: -10px;
-            /* Connect ke garis utama */
-            width: 10px;
-            height: 2px;
-            background: #cbd5e1;
-        }
+                .org-photo {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    border: 2px solid #ecfdf5;
+                    margin-bottom: 4px;
+                }
 
-        /* Penutup garis vertikal agar tidak bablas ke bawah di item terakhir */
-        .v-item:last-child {
-            background: transparent;
-        }
+                :is(.dark .org-photo) {
+                    border-color: rgba(255, 255, 255, 0.1);
+                }
 
-        .vertical-left-tree .v-item:last-child::after {
-            content: '';
-            position: absolute;
-            top: 24px;
-            left: -12px;
-            width: 4px;
-            bottom: 0;
-            background: #f8fafc;
-            /* Tutupi sisa garis dengan warna background */
-        }
+                .org-name {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    line-height: 1.1;
+                    margin-bottom: 2px;
+                    color: #0f172a;
+                    text-align: center;
+                }
 
-        /* 3. Card Styles */
-        .card-node {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            padding: 12px 10px;
-            width: 140px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            z-index: 20;
-            margin: 0 auto;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
+                :is(.dark .org-name) {
+                    color: #f1f5f9;
+                }
 
-        /* Card Kecil untuk list vertikal */
-        .card-node-small {
-            width: 100%;
-            max-width: 180px;
-            padding: 8px;
-            border-radius: 12px;
-            flex-direction: row;
-            gap: 10px;
-            align-items: center;
-        }
+                .org-role {
+                    font-size: 0.65rem;
+                    text-transform: uppercase;
+                    font-weight: 600;
+                    color: #059669;
+                    text-align: center;
+                }
 
-        .card-node:hover {
-            transform: translateY(-5px);
-            border-color: #10b981;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
+                /* Dark Mode Connectors */
+                :is(.dark .org-tree li::before),
+                :is(.dark .org-tree li::after),
+                :is(.dark .org-tree ul ul::before),
+                :is(.dark .org-tree li:last-child::before),
+                :is(.dark .org-tree li:first-child::after),
+                :is(.dark .deputy-stack::before),
+                :is(.dark .deputy-item::before) {
+                    border-color: rgba(255, 255, 255, 0.2);
+                }
+            </style>
 
-        .photo-wrapper {
-            width: 70px;
-            height: 70px;
-            border-radius: 9999px;
-            overflow: hidden;
-            margin-bottom: 8px;
-            border: 3px solid #f0fdf4;
-            box-shadow: 0 0 0 1px #10b981;
-        }
-
-        .card-node-small .photo-wrapper {
-            width: 40px;
-            height: 40px;
-            margin-bottom: 0;
-            border-width: 1px;
-        }
-
-        .photo-wrapper img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .role-badge {
-            font-size: 9px;
-            font-weight: 800;
-            text-transform: uppercase;
-            padding: 2px 8px;
-            border-radius: 99px;
-            margin-bottom: 4px;
-        }
-
-        .name-text {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-            font-size: 12px;
-            color: #1e293b;
-            line-height: 1.2;
-            text-align: center;
-        }
-
-        :is(.dark .name-text) {
-            color: #f3f4f6;
-        }
-
-        :is(.dark .card-node) {
-            background-color: #1f2937;
-            border-color: rgba(255, 255, 255, 0.1);
-            box-shadow: none;
-        }
-
-        :is(.dark .vertical-left-tree::before),
-        :is(.dark .tree li::leading),
-        :is(.dark .tree li::after),
-        :is(.dark .tree li::before),
-        :is(.dark .v-item::before),
-        :is(.dark .tree ul ul::before) {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        :is(.dark .v-item::before) {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        :is(.dark .vertical-left-tree .v-item:last-child::after) {
-            background-color: #051111;
-            /* Match body bg */
-        }
-
-        .card-node-small .name-text {
-            text-align: left;
-        }
-
-        /* Mobile View */
-        /* Mobile View CSS Removed to allow horizontal scrolling of desktop tree */
-
-        @media (min-width: 769px) {
-            .mobile-list {
-                display: none;
-            }
-        }
-    </style>
-    @include('partials.theme-init')
-</head>
-
-<body
-    class="bg-surface-light dark:bg-[#051111] font-body text-slate-800 dark:text-gray-100 antialiased transition-colors duration-300"
-    x-data="{ modalOpen: false, activePerson: {} }">
-    @include('partials.navbar')
-
-    <main class="pt-32 pb-24 px-4 sm:px-6 relative min-h-screen">
-        <div class="max-w-7xl mx-auto relative z-10">
-            <div class="text-center mb-12">
-                <span
-                    class="inline-block px-3 py-1 {{ $tab === 'ippnu' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700' }} rounded-full text-xs font-bold uppercase tracking-wider mb-4">Masa
-                    Khidmat {{ $periode }}</span>
-                <h2 class="font-display font-black text-3xl md:text-5xl text-gray-900 dark:text-white mb-6">Struktur
-                    <span
-                        class="{{ $tab === 'ippnu' ? 'text-amber-500' : 'text-emerald-600 dark:text-emerald-500' }}">{{ $orgName }}</span>
-                </h2>
-
-                <div class="flex justify-center gap-4 mt-8">
-                    <a href="?tab=ipnu"
-                        class="px-6 py-2 rounded-full font-bold text-sm transition-all {{ $tab !== 'ippnu' ? 'bg-emerald-800 text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-200' }}">IPNU</a>
-                    <a href="?tab=ippnu"
-                        class="px-6 py-2 rounded-full font-bold text-sm transition-all {{ $tab === 'ippnu' ? 'bg-amber-600 text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-200' }}">IPPNU</a>
-                </div>
-            </div>
-
-            <div class="w-full overflow-x-auto pb-12 desktop-tree">
-                <div class="min-w-[1200px] mx-auto px-8 pt-8">
+            <div class="w-full overflow-x-auto pb-12">
+                <div class="min-w-[1024px] mx-auto px-4 pt-8 org-tree">
                     @php
-                        // LOGIKA DATA
+                        // 1. KETUA
                         $ketua = $pengurusTree->first(fn($n) => \Illuminate\Support\Str::contains($n->jabatan, 'Ketua') && !\Illuminate\Support\Str::contains($n->jabatan, 'Wakil'));
-                        if (!$ketua)
-                            $ketua = $pengurusTree->first();
+                        if (!$ketua) $ketua = $pengurusTree->first();
 
                         if ($ketua) {
-                            // Subordinates is everyone else
                             $subordinates = $pengurusTree->filter(fn($n) => $n->id !== $ketua->id);
+                            
+                            // 2. SEKRETARIS & BENDAHARA (Main Only)
+                            $mainSek = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Sekretaris') && !\Illuminate\Support\Str::contains($c->jabatan, 'Wakil'))->first();
+                            $mainBen = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Bendahara') && !\Illuminate\Support\Str::contains($c->jabatan, 'Wakil'))->first();
 
-                            // Helper Filters
-                            $filterJob = fn($keyword, $exclude = 'Wakil') => $subordinates->filter(
-                                fn($c) =>
-                                \Illuminate\Support\Str::contains($c->jabatan, $keyword) &&
-                                ($exclude ? !\Illuminate\Support\Str::contains($c->jabatan, $exclude) : true)
-                            )->sortBy('urutan_tampil');
+                            // 3. WAKIL SEKRETARIS & WAKIL BENDAHARA
+                            $wakilSek = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Wakil Sekretaris'))->sortBy('urutan_tampil');
+                            $wakilBen = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Wakil Bendahara'))->sortBy('urutan_tampil');
 
-                            $mainSek = $filterJob('Sekretaris');
-                            $wakilSek = $filterJob('Wakil Sekretaris', null);
-                            $mainBen = $filterJob('Bendahara');
-                            $wakilBen = $filterJob('Wakil Bendahara', null);
-                            $waka = $filterJob('Wakil Ketua', null);
+                            // 4. WAKIL KETUA
+                            $waka = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Wakil Ketua'))->sortBy('urutan_tampil');
 
-                            // Departemen / Lembaga logic based on 'Koordinator' or 'Direktur'
-                            // We group by Department if available, or just list leaders
-                            $usedIds = $mainSek->pluck('id')
-                                ->merge($wakilSek->pluck('id'))
-                                ->merge($mainBen->pluck('id'))
-                                ->merge($wakilBen->pluck('id'))
-                                ->merge($waka->pluck('id'))
-                                ->push($ketua->id);
+                            // Identify used IDs
+                            $usedIds = collect([$ketua->id]);
+                            if($mainSek) $usedIds->push($mainSek->id);
+                            if($mainBen) $usedIds->push($mainBen->id);
+                            $usedIds = $usedIds->merge($wakilSek->pluck('id'))
+                                               ->merge($wakilBen->pluck('id'))
+                                               ->merge($waka->pluck('id'));
 
-                            // Find Department/Lembaga Heads (Koordinator/Direktur/Komandan)
-                            $deptHeads = $subordinates->whereNotIn('id', $usedIds)
-                                ->filter(
-                                    fn($c) =>
-                                    \Illuminate\Support\Str::contains($c->jabatan, ['Koordinator', 'Direktur', 'Komandan', 'Ketua'])
-                                    && !\Illuminate\Support\Str::contains($c->jabatan, ['Wakil'])
-                                )
-                                ->sortBy('urutan_tampil');
-
-                            // Remaining are Members (Anggota)
-                            $usedIds = $usedIds->merge($deptHeads->pluck('id'));
-                            $members = $subordinates->whereNotIn('id', $usedIds);
-
-                            // Mapping Members to their Department Heads for display
-                            // We attach 'children' property dynamically for the view loop
-                            $lembaga = $deptHeads->map(function ($head) use ($members) {
-                                // Find members with same departemen_id
-                                if ($head->departemen) {
-                                    $head->children = $members->where('departemen', $head->departemen);
-                                } else {
-                                    $head->children = collect();
-                                }
-                                return $head;
-                            });
-
-                            // Split Layout Logic for Wakas
-                            $wakaSplit = ceil($waka->count() / 2);
-                            $wakaLeft = $waka->take($wakaSplit);
-                            $wakaRight = $waka->skip($wakaSplit);
+                            // 5. DEPARTEMEN / LEMBAGA (Group remaining by department or list leftovers)
+                            $leftovers = $subordinates->whereNotIn('id', $usedIds)->sortBy('urutan_tampil');
+                            
+                            // Group by Departemen Name/ID if available, otherwise just list them
+                            // Assumption: 'urutan_tampil' helps sort them correctly
                         }
                     @endphp
 
                     @if($ketua)
-                        <div class="flex flex-col items-center relative">
-
-                            <div class="absolute top-20 bottom-0 left-1/2 -translate-x-1/2 w-0.5 bg-slate-300 z-0"></div>
-
-                            <div class="relative z-20 mb-10 flex flex-col items-center">
-                                @include('partials.card-item', ['node' => $ketua, 'tab' => $tab])
-                                <div class="absolute top-full left-1/2 -translate-x-1/2 h-8 w-0.5 bg-slate-300"></div>
+                    <ul>
+                        <li>
+                            <div class="org-card" @click="activePerson = {{ json_encode(['name' => $ketua->kader->nama_lengkap, 'role' => $ketua->jabatan, 'image' => $ketua->kader->foto_path ? asset('storage/' . $ketua->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($ketua->kader->nama_lengkap) . '&background=059669&color=fff', 'quote' => $ketua->kader->quote]) }}; modalOpen = true">
+                                <img src="{{ $ketua->kader->foto_path ? asset('storage/' . $ketua->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($ketua->kader->nama_lengkap) . '&background=059669&color=fff' }}" class="org-photo">
+                                <div class="org-name">{{ $ketua->kader->nama_lengkap }}</div>
+                                <div class="org-role">{{ $ketua->jabatan }}</div>
                             </div>
 
-                            <div class="grid grid-cols-12 gap-8 w-full mb-20 relative z-10">
-                                <div class="absolute top-10 left-[30%] right-[30%] h-0.5 bg-slate-300 -z-10"></div>
-
-                                <div class="col-span-5 flex flex-col items-end pr-8 relative">
-                                    <div class="flex gap-4 justify-end">
-                                        @foreach($mainSek as $s)
-                                            <div class="flex flex-col items-end">
-
-                                                @include('partials.card-item', ['node' => $s, 'tab' => $tab])
-
-                                                @if($wakilSek->count() > 0)
-                                                    <div class="vertical-left-tree">
-                                                        @foreach($wakilSek as $ws)
-                                                            <div class="v-item">
-                                                                @include('partials.card-item-small', ['node' => $ws, 'tab' => $tab])
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
+                            <!-- LEVEL 2: SEKRETARIS --- [ WAKAS NODE ] --- BENDAHARA -->
+                            <ul>
+                                <!-- LEFT WING: SEKRETARIS -->
+                                @if($mainSek)
+                                <li>
+                                    <div class="org-card" @click="activePerson = {{ json_encode(['name' => $mainSek->kader->nama_lengkap, 'role' => $mainSek->jabatan, 'image' => $mainSek->kader->foto_path ? asset('storage/' . $mainSek->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($mainSek->kader->nama_lengkap) . '&background=059669&color=fff', 'quote' => $mainSek->kader->quote]) }}; modalOpen = true">
+                                        <img src="{{ $mainSek->kader->foto_path ? asset('storage/' . $mainSek->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($mainSek->kader->nama_lengkap) . '&background=059669&color=fff' }}" class="org-photo">
+                                        <div class="org-name">{{ \Illuminate\Support\Str::words($mainSek->kader->nama_lengkap, 2) }}</div>
+                                        <div class="org-role">Sekretaris</div>
                                     </div>
-                                </div>
-
-                                <div class="col-span-2"></div>
-
-                                <div class="col-span-5 flex flex-col items-start pl-8 relative">
-                                    <div class="flex gap-4">
-                                        @foreach($mainBen as $b)
-                                            <div class="flex flex-col items-start">
-
-                                                @include('partials.card-item', ['node' => $b, 'tab' => $tab])
-
-                                                @if($wakilBen->count() > 0)
-                                                    <div class="vertical-left-tree">
-                                                        @foreach($wakilBen as $wb)
-                                                            <div class="v-item">
-                                                                @include('partials.card-item-small', ['node' => $wb, 'tab' => $tab])
-                                                            </div>
-                                                        @endforeach
+                                    @if($wakilSek->count() > 0)
+                                        <div class="deputy-stack">
+                                            @foreach($wakilSek as $ws)
+                                                <div class="deputy-item">
+                                                    <div class="org-card" style="transform: scale(0.9); opacity: 0.9;" @click="activePerson = {{ json_encode(['name' => $ws->kader->nama_lengkap, 'role' => $ws->jabatan, 'image' => $ws->kader->foto_path ? asset('storage/' . $ws->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($ws->kader->nama_lengkap) . '&background=059669&color=fff', 'quote' => $ws->kader->quote]) }}; modalOpen = true">
+                                                        <div class="org-name">{{ \Illuminate\Support\Str::words($ws->kader->nama_lengkap, 2) }}</div>
+                                                        <div class="org-role text-[10px]">W. Sekretaris</div>
                                                     </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="w-full relative z-10 mb-16">
-                                <div class="absolute top-0 left-10 right-10 h-0.5 bg-slate-300 -z-10"></div>
-
-                                <div class="grid grid-cols-2 gap-12 pt-8">
-                                    <div class="flex flex-wrap justify-center gap-8 border-r border-slate-200/50">
-                                        @foreach($wakaLeft as $wk)
-                                            <div class="flex flex-col items-center relative">
-                                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-0.5 bg-slate-300">
                                                 </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </li>
+                                @endif
 
-                                                @include('partials.card-item', ['node' => $wk, 'tab' => $tab])
-                                                @if($wk->children->isNotEmpty())
+                                <!-- CENTER: WAKIL KETUA GROUP -->
+                                <li>
+                                     <!-- Placeholder connector node to center the Waket group -->
+                                     <div class="w-[1px] h-[20px] bg-slate-300 mx-auto mb-4"></div>
+                                     
+                                     <!-- Container for Waket that spans width -->
+                                     <div class="relative flex justify-center gap-4">
+                                         <!-- Draw line above Waket group -->
+                                         <div class="absolute -top-4 left-4 right-4 h-[2px] border-t-2 border-slate-300"></div>
+                                         <div class="absolute -top-4 left-1/2 -translate-x-1/2 h-[4px] bg-slate-300 w-[2px]"></div>
 
-                                                    <div class="vertical-left-tree mt-4 w-full">
-                                                        @foreach($wk->children as $kord)
-                                                            <div class="v-item">
-                                                                <div
-                                                                    class="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-0.5 bg-slate-300">
-                                                                </div>
-                                                                @include('partials.card-item-small', ['node' => $kord, 'tab' => $tab])
-
-                                                                @if($kord->children->isNotEmpty())
-                                                                    <div class="vertical-left-tree mt-2">
-                                                                        @foreach($kord->children as $anggota)
-                                                                            <div class="v-item">
-                                                                                @include('partials.card-item-small', ['node' => $anggota, 'tab' => $tab])
-                                                                            </div>
-                                                                        @endforeach
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-
-                                    <div class="flex flex-wrap justify-center gap-8">
-                                        @foreach($wakaRight as $wk)
-                                            <div class="flex flex-col items-center relative">
-                                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-0.5 bg-slate-300">
+                                         @foreach($waka as $wk)
+                                            <div class="flex flex-col items-center relative pt-4">
+                                                <!-- Connector up to the horizontal bar -->
+                                                <div class="absolute top-0 left-1/2 -translate-x-1/2 h-[16px] w-[2px] bg-slate-300"></div>
+                                                
+                                                <div class="org-card" @click="activePerson = {{ json_encode(['name' => $wk->kader->nama_lengkap, 'role' => $wk->jabatan, 'image' => $wk->kader->foto_path ? asset('storage/' . $wk->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($wk->kader->nama_lengkap) . '&background=059669&color=fff', 'quote' => $wk->kader->quote]) }}; modalOpen = true">
+                                                    <img src="{{ $wk->kader->foto_path ? asset('storage/' . $wk->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($wk->kader->nama_lengkap) . '&background=059669&color=fff' }}" class="org-photo">
+                                                    <div class="org-name">{{ \Illuminate\Support\Str::words($wk->kader->nama_lengkap, 2) }}</div>
+                                                    <div class="org-role">Wakil Ketua</div>
                                                 </div>
-
-                                                @include('partials.card-item', ['node' => $wk, 'tab' => $tab])
-
-                                                @if($wk->children->isNotEmpty())
-                                                    <div class="vertical-left-tree mt-4 w-full">
-                                                        @foreach($wk->children as $kord)
-                                                            <div class="v-item">
-                                                                <div
-                                                                    class="absolute -top-8 left-1/2 -translate-x-1/2 h-8 w-0.5 bg-slate-300">
-                                                                </div>
-                                                                @include('partials.card-item-small', ['node' => $kord, 'tab' => $tab])
-
-                                                                @if($kord->children->isNotEmpty())
-                                                                    <div class="vertical-left-tree mt-2">
-                                                                        @foreach($kord->children as $anggota)
-                                                                            <div class="v-item">
-                                                                                @include('partials.card-item-small', ['node' => $anggota, 'tab' => $tab])
-                                                                            </div>
-                                                                        @endforeach
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
                                             </div>
-                                        @endforeach
+                                         @endforeach
+                                     </div>
+
+                                     <!-- LEMBAGA / DEPARTOMEN (Below Wakil Ketua) -->
+                                     @if($leftovers->count() > 0)
+                                        <div class="mt-12 relative pt-8 border-t border-slate-200 dark:border-white/10 w-full">
+                                            <div class="absolute -top-[20px] left-1/2 -translate-x-1/2 h-[20px] w-[2px] bg-slate-300"></div>
+                                            <h3 class="text-center font-bold text-emerald-800 dark:text-emerald-400 mb-6 uppercase tracking-widest text-sm">Lembaga & Departemen</h3>
+                                            
+                                            <div class="flex flex-wrap justify-center gap-6">
+                                                @foreach($leftovers as $l)
+                                                     <div class="org-card" style="border-color: #f59e0b;" @click="activePerson = {{ json_encode(['name' => $l->kader->nama_lengkap, 'role' => $l->jabatan, 'image' => $l->kader->foto_path ? asset('storage/' . $l->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($l->kader->nama_lengkap) . '&background=f59e0b&color=fff', 'quote' => $l->kader->quote]) }}; modalOpen = true">
+                                                        <img src="{{ $l->kader->foto_path ? asset('storage/' . $l->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($l->kader->nama_lengkap) . '&background=f59e0b&color=fff' }}" class="org-photo" style="border-color: #fef3c7;">
+                                                        <div class="org-name">{{ \Illuminate\Support\Str::words($l->kader->nama_lengkap, 2) }}</div>
+                                                        <div class="org-role text-amber-700 dark:text-amber-500">{{ \Illuminate\Support\Str::limit($l->jabatan, 20) }}</div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                     @endif
+                                </li>
+
+                                <!-- RIGHT WING: BENDAHARA -->
+                                @if($mainBen)
+                                <li>
+                                    <div class="org-card" @click="activePerson = {{ json_encode(['name' => $mainBen->kader->nama_lengkap, 'role' => $mainBen->jabatan, 'image' => $mainBen->kader->foto_path ? asset('storage/' . $mainBen->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($mainBen->kader->nama_lengkap) . '&background=059669&color=fff', 'quote' => $mainBen->kader->quote]) }}; modalOpen = true">
+                                        <img src="{{ $mainBen->kader->foto_path ? asset('storage/' . $mainBen->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($mainBen->kader->nama_lengkap) . '&background=059669&color=fff' }}" class="org-photo">
+                                        <div class="org-name">{{ \Illuminate\Support\Str::words($mainBen->kader->nama_lengkap, 2) }}</div>
+                                        <div class="org-role">Bendahara</div>
                                     </div>
-                                </div>
-                            </div>
-
-                            @if($lembaga->count() > 0)
-                                <div class="w-full relative z-10 pt-10">
-                                    <div class="absolute top-10 left-20 right-20 h-0.5 bg-slate-300 -z-10"></div>
-
-                                    <div class="flex justify-center flex-wrap gap-12 pt-8">
-                                        @foreach($lembaga as $l)
-                                            <div class="flex flex-col items-center relative">
-                                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 h-16 w-0.5 bg-slate-300">
+                                    @if($wakilBen->count() > 0)
+                                        <div class="deputy-stack">
+                                            @foreach($wakilBen as $wb)
+                                                <div class="deputy-item">
+                                                    <div class="org-card" style="transform: scale(0.9); opacity: 0.9;" @click="activePerson = {{ json_encode(['name' => $wb->kader->nama_lengkap, 'role' => $wb->jabatan, 'image' => $wb->kader->foto_path ? asset('storage/' . $wb->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($wb->kader->nama_lengkap) . '&background=059669&color=fff', 'quote' => $wb->kader->quote]) }}; modalOpen = true">
+                                                        <div class="org-name">{{ \Illuminate\Support\Str::words($wb->kader->nama_lengkap, 2) }}</div>
+                                                        <div class="org-role text-[10px]">W. Bendahara</div>
+                                                    </div>
                                                 </div>
-
-                                                @include('partials.card-item', ['node' => $l, 'tab' => $tab])
-
-                                                @if($l->children->isNotEmpty())
-                                                    <div class="vertical-left-tree mt-4">
-                                                        @foreach($l->children as $member)
-                                                            <div class="v-item">
-                                                                @include('partials.card-item-small', ['node' => $member, 'tab' => $tab])
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                        </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </li>
+                                @endif
+                            </ul>
+                        </li>
+                    </ul>
                     @endif
                 </div>
-            </div>
-
-            <!-- Mobile list removed to use horizontally scrollable desktop tree -->
+            </div>!-- Mobile list removed to use horizontally scrollable desktop tree -->
 
         </div>
     </main>
