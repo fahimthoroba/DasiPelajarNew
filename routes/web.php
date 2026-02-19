@@ -59,6 +59,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('inventaris', \App\Http\Controllers\Sekretariat\InventarisController::class);
 
         // Admin Features (New)
+        Route::post('pengurus/bulk-store', [\App\Http\Controllers\Sekretariat\PengurusController::class, 'bulkStore'])->name('pengurus.bulk-store');
         Route::resource('pengurus', \App\Http\Controllers\Sekretariat\PengurusController::class);
         Route::resource('absensi', \App\Http\Controllers\Sekretariat\AbsensiController::class);
         Route::resource('sk', \App\Http\Controllers\Sekretariat\SuratKeputusanController::class);

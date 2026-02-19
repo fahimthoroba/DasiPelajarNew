@@ -70,16 +70,35 @@
                     </select>
                 </div>
 
+                <!-- Atasan Langsung (Parent) -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Atasan Langsung (Parent)</label>
+                    <select name="parent_id" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
+                        <option value="">-- Tidak Memiliki Atasan Langsung (Root) --</option>
+                        @foreach($parents as $p)
+                            <option value="{{ $p->id }}">
+                                {{ $p->jabatan }} - {{ $p->kader->nama_lengkap }} 
+                                {{ $p->departemenData ? '('.$p->departemenData->nama_departemen.')' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Contoh: Anggota Dept -> Pilih Koordinator Dept. | Koordinator/W.Sek/W.Ben -> Pilih Wakil Ketua.
+                    </p>
+                </div>
+
                 <!-- Departemen (Optional) -->
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Departemen
-                        (Opsional)</label>
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Departemen / Lembaga</label>
                     <select name="departemen_id" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
-                        <option value="">-- Tidak Membawahi Departemen --</option>
+                        <option value="">-- Tidak Terikat Departemen/Lembaga --</option>
                         @foreach($departemens as $d)
                             <option value="{{ $d->id }}">{{ $d->nama_departemen }}</option>
                         @endforeach
                     </select>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Wajib diisi untuk Wakil Ketua, Koordinator, dan Anggota Departemen.
+                    </p>
                 </div>
 
                 <!-- SK Setup -->

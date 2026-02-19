@@ -119,7 +119,7 @@
                     <a href="{{ route('dashboard.sekretariat.pengurus.index') }}"
                         class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.pengurus.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
                         <span class="material-symbols-outlined">groups</span>
-                        <span class="font-medium">Pengurus</span>
+                        <span class="font-medium">Pengurus PC</span>
                     </a>
 
                     <a href="{{ route('dashboard.sekretariat.sk.index') }}"

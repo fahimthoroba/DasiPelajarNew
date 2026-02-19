@@ -34,8 +34,9 @@ class Pengurus extends Model
         'surat_keputusan_id',
         'tingkatan',
         'nama_tingkatan',
+        'kategori', // Added
         'jabatan',
-        'departemen',
+        'departemen_id', 
         'urutan_tampil',
         'is_active',
     ];
@@ -66,7 +67,7 @@ class Pengurus extends Model
 
     public function departemenData()
     {
-        return $this->belongsTo(Departemen::class, 'departemen', 'id');
+        return $this->belongsTo(Departemen::class, 'departemen_id'); // Updated FK
     }
 
     // Accessors
