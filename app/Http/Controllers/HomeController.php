@@ -163,15 +163,13 @@ class HomeController extends Controller
         $gender = ($tab === 'ippnu') ? 'P' : 'L';
 
         // Load recursive structure
-        // Assuming we rely on parent_id for the tree logic as requested
-        // Start with Roots (Parent ID Null) that match the criteria
-        // Fetch Flat List (Parent/Child logic will be handled in View or Grouping)
+        // Filter by Kategori (IPNU/IPPNU)
+        $targetKategori = strtoupper($tab);
+
         $pengurusTree = Pengurus::with('kader', 'departemenData')
             ->where('tingkatan', 'Cabang')
+            ->where('kategori', $targetKategori) // Strict filtering by Category
             ->where('is_active', true)
-            ->whereHas('kader', function ($q) use ($gender) {
-                $q->where('jenis_kelamin', $gender);
-            })
             ->orderBy('urutan_tampil', 'asc')
             ->get();
 

@@ -263,109 +263,92 @@
                         $themeBorder = $isIppnu ? '#fcd34d' : '#a7f3d0';
 
                         // --- DATA LOGIC ---
-                        $ketua = $pengurusTree->first(fn($n) => \Illuminate\Support\Str::contains($n->jabatan, 'Ketua') && !\Illuminate\Support\Str::contains($n->jabatan, 'Wakil'));
-                        if (!$ketua) $ketua = $pengurusTree->first();
-
+                        // --- DATA LOGIC (REFACTORED) ---
+                        // 1. Identify KETUA
+                        $ketua = $pengurusTree->first(fn($n) => $n->jabatan === 'Ketua');
+                        
                         if ($ketua) {
                             $subordinates = $pengurusTree->filter(fn($n) => $n->id !== $ketua->id);
                             
-                            // 1. MAIN OFFICERS
-                            $mainSek = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Sekretaris') && !\Illuminate\Support\Str::contains($c->jabatan, 'Wakil'))->first();
-                            $mainBen = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Bendahara') && !\Illuminate\Support\Str::contains($c->jabatan, 'Wakil'))->first();
+                            // 2. MAIN OFFICERS (Sekretaris & Bendahara - Non Dept)
+                            // Strict check: Must not have department_id (Core officers)
+                            $mainSek = $subordinates->first(fn($c) => $c->jabatan === 'Sekretaris' && is_null($c->departemen_id));
+                            $mainBen = $subordinates->first(fn($c) => $c->jabatan === 'Bendahara' && is_null($c->departemen_id));
 
-                            $wakilSek = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Wakil Sekretaris'))->sortBy('urutan_tampil');
-                            $wakilBen = $subordinates->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Wakil Bendahara'))->sortBy('urutan_tampil');
+                            $wakilSek = $subordinates->filter(fn($c) => $c->jabatan === 'Wakil Sekretaris' && is_null($c->departemen_id))->sortBy('urutan_tampil');
+                            $wakilBen = $subordinates->filter(fn($c) => $c->jabatan === 'Wakil Bendahara' && is_null($c->departemen_id))->sortBy('urutan_tampil');
 
-                            // 2. IDENTIFY LEMBAGA (Direktur, Komandan)
-                            $lembagaKeywords = ['Direktur', 'Komandan', 'Kepala Divisi'];
-                            $lembagaHeads = $subordinates->filter(function($c) use ($lembagaKeywords) {
-                                foreach ($lembagaKeywords as $keyword) {
-                                    if (\Illuminate\Support\Str::contains($c->jabatan, $keyword)) return true;
-                                }
-                                return false;
-                            });
+                            // 3. GROUP REMAINING BY DEPARTMENT
+                            // Everything else should belong to a Department/Lembaga
+                            // We group by Department ID.
+                            
+                            $deptGroups = $subordinates->filter(fn($n) => !is_null($n->departemen_id))
+                                ->groupBy('departemen_id');
 
-                            // 3. IDENTIFY DEPARTMENTS & WAKIL KETUA
-                            // Exclude already identified
-                            $usedIds = collect([$ketua->id]);
-                            if($mainSek) $usedIds->push($mainSek->id);
-                            if($mainBen) $usedIds->push($mainBen->id);
-                            $usedIds = $usedIds->merge($wakilSek->pluck('id'))
-                                               ->merge($wakilBen->pluck('id'))
-                                               ->merge($lembagaHeads->pluck('id'));
-                            
-                            $pool = $subordinates->whereNotIn('id', $usedIds);
+                            // Separate into LEMBAGA vs DEPARTEMEN based on Status
+                            $lembagaNodes = collect();
+                            $departemenNodes = collect(); // Will contain Waket -> Dept logic
 
-                            // Wakil Ketua
-                            $allWaket = $pool->filter(fn($c) => \Illuminate\Support\Str::contains($c->jabatan, 'Wakil Ketua'))->sortBy('urutan_tampil');
-                            
-                            // Coordinators & Members
-                            $deptMembers = $pool->whereNotIn('id', $allWaket->pluck('id'));
+                            foreach ($deptGroups as $deptId => $members) {
+                                // Get Department Model from first member (loaded via 'departemenData' relation)
+                                $deptModel = $members->first()->departemenData;
+                                if (!$deptModel) continue;
 
-                            // GROUPING STRATEGY
-                            // We group Department Members by 'departemen'.
-                            // We try to match Waket to 'departemen'.
-                            
-                            $departments = $deptMembers->groupBy('departemen'); 
-                            
-                            // Prepare Waket-Dept Pairs
-                            $waketNodes = collect();
-                            
-                            // First, map existing Waket to their Departments
-                            foreach($allWaket as $wk) {
-                                $deptId = $wk->departemen; // Assuming this FK exists and links to Departemen model
-                                if ($deptId && $departments->has($deptId)) {
-                                    $members = $departments->get($deptId);
-                                    $coord = $members->filter(fn($m) => \Illuminate\Support\Str::contains($m->jabatan, 'Koordinator'))->first();
-                                    $others = $members->filter(fn($m) => $m->id !== ($coord->id ?? null))->sortBy('urutan_tampil');
+                                $isLembaga = strtolower($deptModel->Status ?? $deptModel->status ?? '') === 'lembaga';
+
+                                if ($isLembaga) {
+                                    // LEMBAGA STRUCTURE: Direktur/Komandan + Anggota
+                                    // Head is the one who is NOT 'Anggota' or has specific title?
+                                    // Usually "Direktur" or "Komandan". 
+                                    // Or simply the highest rank?
+                                    // Let's find the Head.
+                                    $head = $members->first(fn($m) => $m->jabatan !== 'Anggota');
+                                    // If no specific head found, take the first one?
+                                    if (!$head) $head = $members->first();
                                     
-                                    $waketNodes->push([
-                                        'waket' => $wk,
-                                        'coord' => $coord,
-                                        'members' => $others,
-                                        'dept_id' => $deptId
+                                    $kids = $members->filter(fn($m) => $m->id !== $head->id)->values();
+
+                                    $lembagaNodes->push([
+                                        'head' => $head,
+                                        'members' => $kids,
+                                        'dept' => $deptModel
                                     ]);
-                                    
-                                    // Remove from departments list so we don't process again
-                                    $departments->forget($deptId);
                                 } else {
-                                    // Waket without specific department or department has no members?
-                                    $waketNodes->push([
-                                        'waket' => $wk,
-                                        'coord' => null,
-                                        'members' => collect(),
-                                        'dept_id' => null
+                                    // DEPARTEMEN STRUCTURE: Waket -> Koord -> Members
+                                    // Wait, Waket is usually "Membawahi". 
+                                    // In the Input Form, "Wakil Ketua" is assigned to the Department.
+                                    // So $members includes the Waket?
+                                    // Yes, input form saves Waket with 'departemen_id'.
+                                    
+                                    $waket = $members->first(fn($m) => $m->jabatan === 'Wakil Ketua');
+                                    $koord = $members->first(fn($m) => $m->jabatan === 'Koordinator');
+                                    $wasekDept = $members->first(fn($m) => $m->jabatan === 'Wakil Sekretaris'); // Dept specific
+                                    $wabenDept = $members->first(fn($m) => $m->jabatan === 'Wakil Bendahara'); // Dept specific
+                                    
+                                    $others = $members->filter(function($m) use ($waket, $koord, $wasekDept, $wabenDept) {
+                                        return !in_array($m->id, [
+                                            $waket?->id, 
+                                            $koord?->id,
+                                            $wasekDept?->id,
+                                            $wabenDept?->id
+                                        ]);
+                                    })->sortBy('urutan_tampil')->values();
+
+                                    $departemenNodes->push([
+                                        'waket' => $waket,
+                                        'coord' => $koord,
+                                        'wasek' => $wasekDept,
+                                        'waben' => $wabenDept,
+                                        'members' => $others,
+                                        'dept' => $deptModel
                                     ]);
                                 }
                             }
-
-                            // Handle Remaining Departments (No Waket assigned)
-                            // We will treat them as "Independent Departments" or assign to "General"
-                            $orphanDepts = collect();
-                            foreach($departments as $deptId => $members) {
-                                $coord = $members->filter(fn($m) => \Illuminate\Support\Str::contains($m->jabatan, 'Koordinator'))->first();
-                                $others = $members->filter(fn($m) => $m->id !== ($coord->id ?? null))->sortBy('urutan_tampil');
-                                $orphanDepts->push([
-                                    'coord' => $coord,
-                                    'members' => $others,
-                                    'dept_id' => $deptId
-                                ]);
-                            }
                             
-                            // 4. LEMBAGA GROUPING
-                            // Group Lembaga members (if any) under their heads
-                            // Use simple logic: if member's department matches Head's department (if they have one)
-                            $lembagaNodes = $lembagaHeads->map(function($head) use ($subordinates) {
-                                $children = collect();
-                                // Try to find subordinates with same department if dept is set
-                                if ($head->departemen) {
-                                    $children = $subordinates->filter(fn($s) => $s->departemen == $head->departemen && $s->id != $head->id);
-                                }
-                                return [
-                                    'head' => $head,
-                                    'members' => $children
-                                ];
-                            });
+                            // Re-map $waketNodes variable effectively used in view
+                            // The view expects $waketNodes for the vertical columns.
+                            // We need to pass $departemenNodes to strict matching variable
+                            $waketNodes = $departemenNodes;
                         }
                     @endphp
 
@@ -555,7 +538,7 @@
                     </ul>
                     @endif
                 </div>
-            </div>!-- Mobile list removed to use horizontally scrollable desktop tree -->
+            <!-- </div>!-- Mobile list removed to use horizontally scrollable desktop tree -->
 
         </div>
     </main>

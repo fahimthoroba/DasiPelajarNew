@@ -2,24 +2,9 @@
     // Shared Department Card Component
     // Props: $dept, $cat (IPNU/IPPNU), $pengurus, $kaders
     
-    // Filter officers for this specific dept AND this specific category (if strictly separated)
-    // User wants strict separation. So we assume the records in DB also have 'kategori' = $cat
-    // AND 'departemen_id' = $dept->id
-    
-    // Wait, if Dept is Joint, can it have IPNU officers AND IPPNU officers?
-    // Yes. So filtering by $cat is crucial.
-    
-    $waket = $pengurus->first(fn($p) => $p->jabatan === 'Wakil Ketua' && $p->departemen_id == $dept->id && $p->kategori === $cat); 
-    $wasek = $pengurus->first(fn($p) => $p->jabatan === 'Wakil Sekretaris' && $p->departemen_id == $dept->id && $p->kategori === $cat);
-    $waben = $pengurus->first(fn($p) => $p->jabatan === 'Wakil Bendahara' && $p->departemen_id == $dept->id && $p->kategori === $cat);
-    $koord = $pengurus->first(fn($p) => $p->jabatan === 'Koordinator' && $p->departemen_id == $dept->id && $p->kategori === $cat);
-    
-    $anggota = $pengurus->filter(fn($p) => $p->jabatan === 'Anggota' && $p->departemen_id == $dept->id && $p->kategori === $cat);
-    $deptKey = 'dept_' . $dept->id . '_' . $cat; // Unique Key per Dept/Cat combo
-    
+    // 1. Determine Titles & Roles FIRST
     $isLembaga = strtolower($dept->Status ?? $dept->status ?? '') === 'lembaga';
     
-     // Titles
     if ($isLembaga) {
         $isCommander = in_array($dept->nama_departemen, ['CBP', 'KPP']);
         $headTitle = $isCommander ? 'Komandan' : 'Direktur';
@@ -28,6 +13,16 @@
         $headTitle = 'Wakil Ketua (Membawahi)';
         $headValue = 'Wakil Ketua';
     }
+
+    // 2. Filter officers for this specific dept AND this specific category
+    // Use dynamic $headValue to find the head (Wakil Ketua / Direktur / Komandan)
+    $waket = $pengurus->first(fn($p) => $p->jabatan === $headValue && $p->departemen_id == $dept->id && $p->kategori === $cat); 
+    $wasek = $pengurus->first(fn($p) => $p->jabatan === 'Wakil Sekretaris' && $p->departemen_id == $dept->id && $p->kategori === $cat);
+    $waben = $pengurus->first(fn($p) => $p->jabatan === 'Wakil Bendahara' && $p->departemen_id == $dept->id && $p->kategori === $cat);
+    $koord = $pengurus->first(fn($p) => $p->jabatan === 'Koordinator' && $p->departemen_id == $dept->id && $p->kategori === $cat);
+    
+    $anggota = $pengurus->filter(fn($p) => $p->jabatan === 'Anggota' && $p->departemen_id == $dept->id && $p->kategori === $cat);
+    $deptKey = 'dept_' . $dept->id . '_' . $cat; // Unique Key per Dept/Cat combo
 @endphp
 
 <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm space-y-6">
@@ -94,12 +89,12 @@
             </div>
         @else
              <!-- LEMBAGA MESSAGE -->
-             <div>
+             <!-- <div>
                 <div class="p-4 bg-slate-50 rounded-lg text-sm text-slate-500">
                     Lembaga hanya memiliki Komandan/Direktur dan Anggota/Divisi. <br>
                     Silahkan input anggota dibagian bawah.
                 </div>
-             </div>
+             </div> -->
         @endif
     </div>
 

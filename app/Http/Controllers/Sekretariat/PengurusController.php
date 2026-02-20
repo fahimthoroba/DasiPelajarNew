@@ -50,7 +50,24 @@ class PengurusController extends Controller
         $tingkatan = 'Cabang'; 
         
         \DB::transaction(function () use ($request, $skId, $tingkatan) {
-            foreach ($request->pengurus as $item) {
+            // Flatten the input first
+            $allItems = [];
+            foreach ($request->pengurus as $key => $value) {
+                // Check if this is a direct item (has 'jabatan') or a list of items (numeric keys)
+                // The 'anggota' input is an array of items.
+                if (isset($value['jabatan'])) {
+                     $allItems[] = $value;
+                } elseif (is_array($value)) {
+                     // It's a list (like anggota), merge them
+                     foreach ($value as $subItem) {
+                         if (isset($subItem['jabatan'])) {
+                             $allItems[] = $subItem;
+                         }
+                     }
+                }
+            }
+
+            foreach ($allItems as $item) {
                 // If ID exists but no Name -> Delete
                 // Name is unique identifier for us now.
                 $nama = $item['kader_nama'] ?? null;
