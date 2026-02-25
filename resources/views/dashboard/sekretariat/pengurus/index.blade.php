@@ -6,9 +6,9 @@
     <div class="max-w-4xl mx-auto space-y-6" x-data="{ activeTab: 'IPNU' }">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold font-display text-slate-800 dark:text-white">Formatur Pengurus PC</h1>
+                <h1 class="text-2xl font-bold font-display text-slate-800 dark:text-white">Formatur Pengurus {{ $organisasi->nama }}</h1>
                 <div class="text-sm text-slate-500">
-                    Mode Bulk Editor (Terpisah)
+                    Mode Bulk Editor - {{ $sk_aktif->judul_sk ?? 'SK Belum Dipilih' }}
                 </div>
             </div>
             
@@ -51,17 +51,15 @@
               class="space-y-8" x-show="activeTab === 'IPNU'" x-data="pengurusForm()">
             @csrf
             <input type="hidden" name="kategori" value="IPNU">
+            <input type="hidden" name="organisasi_id" value="{{ $organisasi->id }}">
+            <input type="hidden" name="sk_id" value="{{ $sk_aktif->id }}">
 
             <!-- SK SELECTION (IPNU) -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
                 <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Dasar Surat Keputusan (SK) - IPNU</label>
-                <select name="sk_id" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
-                    @foreach($sks as $sk)
-                        <option value="{{ $sk->id }}" {{ $pengurus->first(fn($p) => $p->kategori === 'IPNU')?->surat_keputusan_id == $sk->id ? 'selected' : '' }}>
-                            {{ $sk->nomor_sk }} ({{ $sk->tentang }})
-                        </option>
-                    @endforeach
-                </select>
+                <div class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-700 font-medium">
+                    {{ $sk_aktif->nomor_sk }} ({{ $sk_aktif->judul_sk }})
+                </div>
             </div>
 
             <!-- CORE OFFICERS (IPNU) -->
@@ -79,7 +77,21 @@
                     <input type="hidden" name="pengurus[{{ $pKey }}_ketua][jabatan]" value="Ketua">
                     <input type="hidden" name="pengurus[{{ $pKey }}_ketua][kategori]" value="{{ $cat }}">
                     @if($ketua) <input type="hidden" name="pengurus[{{ $pKey }}_ketua][id]" value="{{ $ketua->id }}"> @endif
-                    <input type="text" name="pengurus[{{ $pKey }}_ketua][kader_nama]" value="{{ $ketua?->kader->nama_lengkap }}" list="kaderList" class="input-field mt-1" placeholder="Nama Ketua...">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1">
+                        <div class="md:col-span-1 border-r pr-3 border-transparent md:border-slate-200">
+                            <input type="text" name="pengurus[{{ $pKey }}_ketua][kader_nama]" value="{{ $ketua?->kader->nama_lengkap }}" list="kaderList" class="input-field" placeholder="Nama Ketua...">
+                        </div>
+                        <div class="md:col-span-2 grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">No. HP (Username)</label>
+                                <input type="text" name="pengurus[{{ $pKey }}_ketua][phone]" value="{{ $ketua?->kader->no_hp }}" class="input-field text-sm !py-1.5" placeholder="0812345...">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Tgl Lahir (Password)</label>
+                                <input type="date" name="pengurus[{{ $pKey }}_ketua][dob]" value="{{ $ketua?->kader->tanggal_lahir }}" class="input-field text-sm !py-1.5">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -87,14 +99,26 @@
                         <input type="hidden" name="pengurus[{{ $pKey }}_sek][jabatan]" value="Sekretaris">
                         <input type="hidden" name="pengurus[{{ $pKey }}_sek][kategori]" value="{{ $cat }}">
                         @if($sek) <input type="hidden" name="pengurus[{{ $pKey }}_sek][id]" value="{{ $sek->id }}"> @endif
-                        <input type="text" name="pengurus[{{ $pKey }}_sek][kader_nama]" value="{{ $sek?->kader->nama_lengkap }}" list="kaderList" class="input-field mt-1" placeholder="Nama Sekretaris...">
+                        <div class="space-y-2 mt-1">
+                            <input type="text" name="pengurus[{{ $pKey }}_sek][kader_nama]" value="{{ $sek?->kader->nama_lengkap }}" list="kaderList" class="input-field" placeholder="Nama Sekretaris...">
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                <div><input type="text" name="pengurus[{{ $pKey }}_sek][phone]" value="{{ $sek?->kader->no_hp }}" class="input-field text-xs !py-1" placeholder="No HP..."></div>
+                                <div><input type="date" name="pengurus[{{ $pKey }}_sek][dob]" value="{{ $sek?->kader->tanggal_lahir }}" class="input-field text-xs !py-1" title="Tgl Lahir"></div>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="badge-role bg-amber-100 text-amber-800">Bendahara</label>
                         <input type="hidden" name="pengurus[{{ $pKey }}_ben][jabatan]" value="Bendahara">
                         <input type="hidden" name="pengurus[{{ $pKey }}_ben][kategori]" value="{{ $cat }}">
                         @if($ben) <input type="hidden" name="pengurus[{{ $pKey }}_ben][id]" value="{{ $ben->id }}"> @endif
-                        <input type="text" name="pengurus[{{ $pKey }}_ben][kader_nama]" value="{{ $ben?->kader->nama_lengkap }}" list="kaderList" class="input-field mt-1" placeholder="Nama Bendahara...">
+                        <div class="space-y-2 mt-1">
+                            <input type="text" name="pengurus[{{ $pKey }}_ben][kader_nama]" value="{{ $ben?->kader->nama_lengkap }}" list="kaderList" class="input-field" placeholder="Nama Bendahara...">
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                <div><input type="text" name="pengurus[{{ $pKey }}_ben][phone]" value="{{ $ben?->kader->no_hp }}" class="input-field text-xs !py-1" placeholder="No HP..."></div>
+                                <div><input type="date" name="pengurus[{{ $pKey }}_ben][dob]" value="{{ $ben?->kader->tanggal_lahir }}" class="input-field text-xs !py-1" title="Tgl Lahir"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,16 +149,15 @@
             @csrf
             <input type="hidden" name="kategori" value="IPPNU">
 
+            <input type="hidden" name="organisasi_id" value="{{ $organisasi->id }}">
+            <input type="hidden" name="sk_id" value="{{ $sk_aktif->id }}">
+
             <!-- SK SELECTION (IPPNU) -->
             <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
                 <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Dasar Surat Keputusan (SK) - IPPNU</label>
-                <select name="sk_id" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
-                    @foreach($sks as $sk)
-                        <option value="{{ $sk->id }}" {{ $pengurus->first(fn($p) => $p->kategori === 'IPPNU')?->surat_keputusan_id == $sk->id ? 'selected' : '' }}>
-                            {{ $sk->nomor_sk }} ({{ $sk->tentang }})
-                        </option>
-                    @endforeach
-                </select>
+                <div class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-slate-700 font-medium">
+                    {{ $sk_aktif->nomor_sk }} ({{ $sk_aktif->judul_sk }})
+                </div>
             </div>
 
             <!-- CORE OFFICERS (IPPNU) -->
@@ -152,7 +175,21 @@
                     <input type="hidden" name="pengurus[{{ $pKey }}_ketua][jabatan]" value="Ketua">
                     <input type="hidden" name="pengurus[{{ $pKey }}_ketua][kategori]" value="{{ $cat }}">
                     @if($ketua) <input type="hidden" name="pengurus[{{ $pKey }}_ketua][id]" value="{{ $ketua->id }}"> @endif
-                    <input type="text" name="pengurus[{{ $pKey }}_ketua][kader_nama]" value="{{ $ketua?->kader->nama_lengkap }}" list="kaderList" class="input-field mt-1" placeholder="Nama Ketua...">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-1">
+                        <div class="md:col-span-1 border-r pr-3 border-transparent md:border-slate-200">
+                            <input type="text" name="pengurus[{{ $pKey }}_ketua][kader_nama]" value="{{ $ketua?->kader->nama_lengkap }}" list="kaderList" class="input-field" placeholder="Nama Ketua...">
+                        </div>
+                        <div class="md:col-span-2 grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">No. HP (Username)</label>
+                                <input type="text" name="pengurus[{{ $pKey }}_ketua][phone]" value="{{ $ketua?->kader->no_hp }}" class="input-field text-sm !py-1.5" placeholder="0812345...">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1 block">Tgl Lahir (Password)</label>
+                                <input type="date" name="pengurus[{{ $pKey }}_ketua][dob]" value="{{ $ketua?->kader->tanggal_lahir }}" class="input-field text-sm !py-1.5">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
@@ -160,14 +197,26 @@
                         <input type="hidden" name="pengurus[{{ $pKey }}_sek][jabatan]" value="Sekretaris">
                         <input type="hidden" name="pengurus[{{ $pKey }}_sek][kategori]" value="{{ $cat }}">
                         @if($sek) <input type="hidden" name="pengurus[{{ $pKey }}_sek][id]" value="{{ $sek->id }}"> @endif
-                        <input type="text" name="pengurus[{{ $pKey }}_sek][kader_nama]" value="{{ $sek?->kader->nama_lengkap }}" list="kaderList" class="input-field mt-1" placeholder="Nama Sekretaris...">
+                        <div class="space-y-2 mt-1">
+                            <input type="text" name="pengurus[{{ $pKey }}_sek][kader_nama]" value="{{ $sek?->kader->nama_lengkap }}" list="kaderList" class="input-field" placeholder="Nama Sekretaris...">
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                <div><input type="text" name="pengurus[{{ $pKey }}_sek][phone]" value="{{ $sek?->kader->no_hp }}" class="input-field text-xs !py-1" placeholder="No HP..."></div>
+                                <div><input type="date" name="pengurus[{{ $pKey }}_sek][dob]" value="{{ $sek?->kader->tanggal_lahir }}" class="input-field text-xs !py-1" title="Tgl Lahir"></div>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <label class="badge-role bg-amber-100 text-amber-800">Bendahara</label>
                         <input type="hidden" name="pengurus[{{ $pKey }}_ben][jabatan]" value="Bendahara">
                         <input type="hidden" name="pengurus[{{ $pKey }}_ben][kategori]" value="{{ $cat }}">
                         @if($ben) <input type="hidden" name="pengurus[{{ $pKey }}_ben][id]" value="{{ $ben->id }}"> @endif
-                        <input type="text" name="pengurus[{{ $pKey }}_ben][kader_nama]" value="{{ $ben?->kader->nama_lengkap }}" list="kaderList" class="input-field mt-1" placeholder="Nama Bendahara...">
+                        <div class="space-y-2 mt-1">
+                            <input type="text" name="pengurus[{{ $pKey }}_ben][kader_nama]" value="{{ $ben?->kader->nama_lengkap }}" list="kaderList" class="input-field" placeholder="Nama Bendahara...">
+                            <div class="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg border border-slate-100 dark:border-slate-700">
+                                <div><input type="text" name="pengurus[{{ $pKey }}_ben][phone]" value="{{ $ben?->kader->no_hp }}" class="input-field text-xs !py-1" placeholder="No HP..."></div>
+                                <div><input type="date" name="pengurus[{{ $pKey }}_ben][dob]" value="{{ $ben?->kader->tanggal_lahir }}" class="input-field text-xs !py-1" title="Tgl Lahir"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

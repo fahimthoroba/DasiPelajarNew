@@ -44,8 +44,13 @@ class BeritaForm
                     ->image()
                     ->disk('public')
                     ->directory('berita-thumbnails'),
-                \Filament\Forms\Components\RichEditor::make('konten')
+                \AmidEsfahani\FilamentTinyEditor\TinyEditor::make('konten')
                     ->required()
+                    ->fileAttachmentsDisk('public')
+                    ->fileAttachmentsDirectory('berita-images')
+                    ->fileAttachmentsVisibility('public')
+                    ->profile('default')
+                    ->imageAdvtab(true)
                     ->columnSpanFull(),
                 \Filament\Forms\Components\Select::make('status')
                     ->options([

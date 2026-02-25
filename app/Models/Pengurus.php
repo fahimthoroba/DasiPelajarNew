@@ -38,6 +38,7 @@ class Pengurus extends Model
         'jabatan',
         'departemen_id', 
         'urutan_tampil',
+        'organisasi_id',
         'is_active',
     ];
 
@@ -48,6 +49,11 @@ class Pengurus extends Model
     public function parent()
     {
         return $this->belongsTo(Pengurus::class, 'parent_id');
+    }
+
+    public function organisasi()
+    {
+        return $this->belongsTo(Organisasi::class, 'organisasi_id');
     }
 
     public function children()

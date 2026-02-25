@@ -16,11 +16,11 @@ class ProgramKerjaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = RealisasiProgram::with(['pac', 'kategori', 'departemen']);
+        $query = RealisasiProgram::with(['organisasi', 'kategori', 'departemen']);
 
-        // Filter by PAC
-        if ($request->filled('pac_id')) {
-            $query->where('pac_id', $request->pac_id);
+        // Filter by Organisasi
+        if ($request->filled('organisasi_id')) {
+            $query->where('organisasi_id', $request->organisasi_id);
         }
 
         // Search by Name
@@ -30,10 +30,10 @@ class ProgramKerjaController extends Controller
 
         $programs = $query->latest()->paginate(10)->withQueryString();
 
-        // List of PAC users for filter dropdown
-        $pacs = User::where('role', 'pac')->orderBy('name')->get();
+        // List of Organisasi for filter dropdown
+        $organisasis = \App\Models\Organisasi::orderBy('nama')->get();
 
-        return view('dashboard.admin.proker.index', compact('programs', 'pacs'));
+        return view('dashboard.admin.proker.index', compact('programs', 'organisasis'));
     }
 
     /**
@@ -41,11 +41,11 @@ class ProgramKerjaController extends Controller
      */
     public function edit(string $id)
     {
-        // Admin can edit ANY program (no where 'pac_id' check)
+        // Admin can edit ANY program
         $program = RealisasiProgram::findOrFail($id);
 
         $kategoris = KategoriProgram::where('status_verifikasi', true)
-            ->orWhere('dibuat_oleh_pac_id', $program->pac_id) // Allow category created by the program owner
+            ->orWhere('organisasi_id', $program->organisasi_id) // Allow category created by the program owner
             ->orderBy('nama_kategori')
             ->get();
 

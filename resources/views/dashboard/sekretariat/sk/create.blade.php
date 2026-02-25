@@ -17,6 +17,21 @@
                 class="space-y-6">
                 @csrf
 
+                @if(in_array(auth()->user()->role, ['pac', 'pr', 'pk']))
+                    <input type="hidden" name="organisasi_id" value="{{ auth()->user()->organisasi_id }}">
+                @else
+                    <!-- Organisasi (Hanya PC/Admin) -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Pilih Organisasi</label>
+                        <select name="organisasi_id" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
+                            <option value="">Pilih...</option>
+                            @foreach(\App\Models\Organisasi::orderBy('tingkat')->orderBy('nama')->get() as $org)
+                                <option value="{{ $org->id }}">{{ $org->tingkat }} {{ $org->nama }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
+
                 <!-- Nomor SK -->
                 <div>
                     <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2">Nomor Surat Keputusan

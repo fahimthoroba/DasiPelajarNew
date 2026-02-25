@@ -115,4 +115,13 @@ class BeritaAdminController extends Controller
 
         return redirect()->route('dashboard.berita.index')->with('success', 'Berita berhasil dihapus!');
     }
+
+    public function uploadImage(Request $request)
+    {
+        if ($request->hasFile('file')) {
+            $path = $request->file('file')->store('berita-images', 'public');
+            return response()->json(['location' => asset('storage/' . $path)]);
+        }
+        return response()->json(['error' => 'No file uploaded.'], 400);
+    }
 }

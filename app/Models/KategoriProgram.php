@@ -32,8 +32,8 @@ class KategoriProgram extends Model
         return $this->belongsTo(Departemen::class, 'departemen_id', 'id');
     }
 
-    public function pembuat()
+    public function organisasi()
     {
-        return $this->belongsTo(User::class, 'dibuat_oleh_pac_id', 'id');
+        return $this->belongsTo(Organisasi::class, 'organisasi_id', 'id');
     }
 }

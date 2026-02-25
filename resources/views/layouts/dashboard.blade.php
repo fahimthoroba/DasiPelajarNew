@@ -115,18 +115,13 @@
                         <span class="material-symbols-outlined">folder_shared</span>
                         <span class="font-medium">Master Data</span>
                     </a>
-
-                    <a href="{{ route('dashboard.sekretariat.pengurus.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.pengurus.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">groups</span>
-                        <span class="font-medium">Pengurus PC</span>
+                    <a href="{{ route('dashboard.sekretariat.organisasi.index') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.organisasi.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
+                        <span class="material-symbols-outlined">corporate_fare</span>
+                        <span class="font-medium">Organisasi & Ranting</span>
                     </a>
 
-                    <a href="{{ route('dashboard.sekretariat.sk.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.sk.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">workspace_premium</span>
-                        <span class="font-medium">Surat Keputusan (SK)</span>
-                    </a>
+
 
                     <a href="{{ route('dashboard.sekretariat.absensi.index') }}"
                         class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.absensi.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
@@ -148,11 +143,18 @@
                 @endif
 
                 <!-- Dep. Organisasi Module (PAC & Admin & Dep. Organisasi) -->
-                @if(in_array(auth()->user()->role, ['admin', 'pac', 'dep_organisasi']))
+                @if(in_array(auth()->user()->role, ['admin', 'pac', 'dep_organisasi', 'pr', 'pk']))
+                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Organisasi</p>
+
+                    <a href="{{ route('dashboard.sekretariat.sk.index') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.sk.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
+                        <span class="material-symbols-outlined">workspace_premium</span>
+                        <span class="font-medium">Surat Keputusan (SK)</span>
+                    </a>
                     <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Dep. Organisasi
                     </p>
 
-                    <a href="{{ auth()->user()->role === 'pac' ? route('dashboard.pac.proker.index') : route('dashboard.admin.proker.index') }}"
+                    <a href="{{ in_array(auth()->user()->role, ['pac', 'pr', 'pk']) ? route('dashboard.pac.proker.index') : route('dashboard.admin.proker.index') }}"
                         class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.pac.proker.*') || request()->routeIs('dashboard.admin.proker.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
                         <span class="material-symbols-outlined">event_available</span>
                         <span class="font-medium">Daftar Program Kerja</span>
@@ -165,11 +167,11 @@
                             <span class="font-medium">Analisa Data</span>
                         </a>
 
-                        <a href="{{ route('dashboard.admin.pac.index') }}"
-                            class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.admin.pac.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                            <span class="material-symbols-outlined">manage_accounts</span>
-                            <span class="font-medium">Manajemen Akun PAC</span>
-                        </a>
+                        <a href="{{ route('dashboard.admin.users.index') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.admin.users.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
+                        <span class="material-symbols-outlined">manage_accounts</span>
+                        <span class="font-medium">Manajemen Pengguna</span>
+                    </a>
                     @endif
                 @endif
 

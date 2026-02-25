@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\RealisasiProgram;
-use App\Models\User;
+use App\Models\Organisasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -53,8 +53,8 @@ class AnalisaController extends Controller
             $chartData[] = $monthlyStats[$i] ?? 0;
         }
 
-        // 3. Peringkat PAC (Global / All Time) - Bisa diubah jika mau per tahun
-        $allPacs = User::where('role', 'pac')
+        // 3. Peringkat PAC (Global / All Time)
+        $allPacs = Organisasi::where('tingkat', 'PAC')
             ->withCount('realisasiPrograms as proker_count')
             ->with(['realisasiPrograms' => function ($q) {
                 $q->latest('tgl_mulai')->limit(1);
@@ -127,12 +127,12 @@ class AnalisaController extends Controller
 
 
         // 6. Calendar Heatmap Data (GitHub Style) - Filtered by Year
-        $dailyCounts = RealisasiProgram::join('users', 'realisasi_program.pac_id', '=', 'users.id')
+        $dailyCounts = RealisasiProgram::join('organisasis', 'realisasi_program.organisasi_id', '=', 'organisasis.id')
             ->select(
                 DB::raw('DATE(realisasi_program.tgl_mulai) as date'),
                 DB::raw('COUNT(*) as count')
             )
-            ->where('users.role', 'pac')
+            ->where('organisasis.tingkat', 'PAC')
             ->whereYear('realisasi_program.tgl_mulai', $year) // Updated filter
             ->groupBy('date')
             ->pluck('count', 'date')
@@ -219,7 +219,7 @@ class AnalisaController extends Controller
 
     public function programsByDate($date)
     {
-        $programs = RealisasiProgram::with(['pac', 'kategori', 'departemen'])
+        $programs = RealisasiProgram::with(['organisasi', 'kategori', 'departemen'])
             ->whereDate('tgl_mulai', $date)
             ->orWhereDate('tgl_selesai', $date)
             ->latest('tgl_mulai')
@@ -235,7 +235,7 @@ class AnalisaController extends Controller
         $departemen = Departemen::findOrFail($id);
         
         // Filter langsung by departemen_id
-        $programs = RealisasiProgram::with(['pac', 'kategori', 'departemen'])
+        $programs = RealisasiProgram::with(['organisasi', 'kategori', 'departemen'])
             ->where('departemen_id', $id)
             ->latest('tgl_mulai')
             ->paginate(20);
@@ -249,7 +249,7 @@ class AnalisaController extends Controller
     {
         $kategori = KategoriProgram::findOrFail($id);
 
-        $programs = RealisasiProgram::with(['pac', 'kategori', 'departemen'])
+        $programs = RealisasiProgram::with(['organisasi', 'kategori', 'departemen'])
             ->where('kategori_program_id', $id)
             ->latest('tgl_mulai')
             ->paginate(20);
@@ -271,7 +271,7 @@ class AnalisaController extends Controller
 
         $namaKategori = $mapping[$id] ?? 'Kategori Tidak Dikenal';
 
-        $programs = RealisasiProgram::with(['pac', 'kategori', 'departemen'])
+        $programs = RealisasiProgram::with(['organisasi', 'kategori', 'departemen'])
             ->where('id_kategori_baru', $id)
             ->latest('tgl_mulai')
             ->paginate(20);
@@ -283,9 +283,9 @@ class AnalisaController extends Controller
 
     public function detail(Request $request, $id)
 {
-    $pac = User::findOrFail($id);
+    $pac = Organisasi::findOrFail($id);
     
-    if ($pac->role !== 'pac') {
+    if ($pac->tingkat !== 'PAC') {
         abort(404);
     }
 

@@ -12,7 +12,8 @@ class RealisasiProgramController extends Controller
      */
     public function index()
     {
-        $programs = \App\Models\RealisasiProgram::where('pac_id', auth()->id())
+        $orgId = auth()->user()->getActiveOrganisasiId();
+        $programs = \App\Models\RealisasiProgram::where('organisasi_id', $orgId)
             ->with('kategori')
             ->latest()
             ->paginate(10);
@@ -25,8 +26,9 @@ class RealisasiProgramController extends Controller
      */
     public function create()
     {
+        $orgId = auth()->user()->getActiveOrganisasiId();
         $kategoris = \App\Models\KategoriProgram::where('status_verifikasi', true)
-            ->orWhere('dibuat_oleh_pac_id', auth()->id())
+            ->orWhere('organisasi_id', $orgId)
             ->orderBy('nama_kategori')
             ->get();
 
@@ -67,7 +69,7 @@ class RealisasiProgramController extends Controller
                 'nama_kategori' => $request->kategori_baru,
                 'slug' => $slug,
                 'departemen_id' => 'DEP-ORG', // Kategori default ke Organisasi atau bisa dihapus relasinya nanti
-                'dibuat_oleh_pac_id' => auth()->id(),
+                'organisasi_id' => auth()->user()->getActiveOrganisasiId(),
                 'status_verifikasi' => true, 
             ]);
             $kategoriId = $kategori->id;
@@ -77,7 +79,7 @@ class RealisasiProgramController extends Controller
         $isFix = in_array($request->status, ['Pasti', 'Terlaksana']);
 
         \App\Models\RealisasiProgram::create([
-            'pac_id' => auth()->id(),
+            'organisasi_id' => auth()->user()->getActiveOrganisasiId(),
             'kategori_program_id' => $kategoriId,
             'departemen_id' => $request->departemen_id,
             'nama_lokal' => $request->nama_lokal,
@@ -103,10 +105,11 @@ class RealisasiProgramController extends Controller
      */
     public function edit(string $id)
     {
-        $program = \App\Models\RealisasiProgram::where('pac_id', auth()->id())->findOrFail($id);
+        $orgId = auth()->user()->getActiveOrganisasiId();
+        $program = \App\Models\RealisasiProgram::where('organisasi_id', $orgId)->findOrFail($id);
 
         $kategoris = \App\Models\KategoriProgram::where('status_verifikasi', true)
-            ->orWhere('dibuat_oleh_pac_id', auth()->id())
+            ->orWhere('organisasi_id', $orgId)
             ->orderBy('nama_kategori')
             ->get();
 
@@ -120,7 +123,8 @@ class RealisasiProgramController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $program = \App\Models\RealisasiProgram::where('pac_id', auth()->id())->findOrFail($id);
+        $orgId = auth()->user()->getActiveOrganisasiId();
+        $program = \App\Models\RealisasiProgram::where('organisasi_id', $orgId)->findOrFail($id);
 
         $request->validate([
             'nama_lokal' => 'required|string|max:255',
@@ -152,7 +156,8 @@ class RealisasiProgramController extends Controller
     }
     public function destroy(string $id)
     {
-        $program = \App\Models\RealisasiProgram::where('pac_id', auth()->id())->findOrFail($id);
+        $orgId = auth()->user()->getActiveOrganisasiId();
+        $program = \App\Models\RealisasiProgram::where('organisasi_id', $orgId)->findOrFail($id);
         $program->delete();
 
         return back()->with('success', 'Program kerja berhasil dihapus.');

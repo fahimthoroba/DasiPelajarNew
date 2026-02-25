@@ -39,6 +39,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Lembaga Pers Modules
+    Route::post('dashboard/berita/upload-image', [BeritaAdminController::class, 'uploadImage'])->name('dashboard.berita.upload_image');
     Route::resource('dashboard/berita', BeritaAdminController::class, ['as' => 'dashboard']);
     Route::resource('dashboard/kategori', KategoriAdminController::class, ['as' => 'dashboard']);
     Route::resource('dashboard/slider', SliderAdminController::class, ['as' => 'dashboard']);
@@ -63,6 +64,8 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('pengurus', \App\Http\Controllers\Sekretariat\PengurusController::class);
         Route::resource('absensi', \App\Http\Controllers\Sekretariat\AbsensiController::class);
         Route::resource('sk', \App\Http\Controllers\Sekretariat\SuratKeputusanController::class);
+        Route::patch('sk/{id}/status', [\App\Http\Controllers\Sekretariat\SuratKeputusanController::class, 'updateStatus'])->name('sk.update-status');
+        Route::resource('organisasi', \App\Http\Controllers\Sekretariat\OrganisasiController::class);
     });
 
     // Departemen Modules
@@ -101,6 +104,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/analisa/kategori/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'programsByKategori'])->name('analisa.kategori');
         Route::get('/analisa/kategori-baru/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'programsByKategoriBaru'])->name('analisa.kategori_baru');
         Route::get('/analisa/{id}', [\App\Http\Controllers\Admin\AnalisaController::class, 'detail'])->name('analisa.detail');
-        Route::resource('pac', \App\Http\Controllers\Admin\PacManagementController::class);
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     });
 });

@@ -10,12 +10,19 @@ class SuratKeputusan extends Model
     use HasFactory;
 
     protected $fillable = [
+        'organisasi_id',
         'nomor_sk',
         'judul_sk',
         'tgl_berlaku',
         'tgl_selesai',
+        'status', // Draft, Menunggu Pengesahan PC, Aktif, Demisioner, Ditolak
         'file_sk_path',
     ];
+
+    public function organisasi()
+    {
+        return $this->belongsTo(Organisasi::class, 'organisasi_id');
+    }
 
     public function pengurus()
     {

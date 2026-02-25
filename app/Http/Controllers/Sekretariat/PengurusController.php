@@ -7,6 +7,7 @@ use App\Models\Pengurus;
 use App\Models\Kader;
 use App\Models\Departemen;
 use App\Models\SuratKeputusan;
+use App\Models\Organisasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 
@@ -14,40 +15,59 @@ class PengurusController extends Controller
 {
     public function index(Request $request)
     {
-        // We now load ALL data for client-side tabs.
-        // Get structured data (Cabang only)
+        // Require Organisasi Context or fallback
+        $organisasi_id = $request->organisasi_id;
+        $sk_id = $request->sk_id;
+
+        // Default to first PC if no context provided
+        if (!$organisasi_id) {
+            $defaultOrg = Organisasi::where('tingkat', 'PC')->first();
+            if ($defaultOrg) {
+                 return redirect()->route('dashboard.sekretariat.organisasi.show', $defaultOrg->id)->with('error', 'Pilih SK terlebih dahulu untuk mengedit struktur.');
+            }
+            return redirect()->route('dashboard.sekretariat.organisasi.index')->with('error', 'Pilih Organisasi terlebih dahulu.');
+        }
+
+        $organisasi = Organisasi::findOrFail($organisasi_id);
+        $sk_aktif = $sk_id ? SuratKeputusan::findOrFail($sk_id) : SuratKeputusan::where('organisasi_id', $organisasi->id)->latest('tgl_berlaku')->first();
+
+        // Get structured data for this specific Organization AND SK
         $pengurus = Pengurus::with(['kader', 'departemenData', 'sk'])
-            ->where('tingkatan', 'Cabang')
+            ->where('organisasi_id', $organisasi->id)
+            ->when($sk_aktif, function($query) use ($sk_aktif) {
+                 return $query->where('surat_keputusan_id', $sk_aktif->id);
+            })
             ->orderBy('urutan_tampil', 'asc')
             ->get();
             
         // Data for Dropdowns
         $kaders = Kader::orderBy('nama_lengkap')->get();
-        // Get ALL Departments
         // Use ID ordering or Name for now to prevent SQL error on missing column
         $departemens = Departemen::orderBy('id')->get();
-        // If we add ordering column later, we can use it.
         if (Schema::hasColumn('departemens', 'urutan_tampil')) {
              $departemens = Departemen::orderBy('urutan_tampil')->get();
         }
         
-        $sks = SuratKeputusan::where('tgl_selesai', '>', now())->get();
+        $sks = SuratKeputusan::where('organisasi_id', $organisasi->id)->get();
 
-        return view('dashboard.sekretariat.pengurus.index', compact('pengurus', 'kaders', 'departemens', 'sks'));
+        return view('dashboard.sekretariat.pengurus.index', compact('pengurus', 'kaders', 'departemens', 'sks', 'organisasi', 'sk_aktif'));
     }
 
     public function bulkStore(Request $request)
     {
         // Validate basic structure
         $request->validate([
+            'organisasi_id' => 'required|exists:organisasis,id',
             'sk_id' => 'required|exists:surat_keputusans,id',
             'pengurus' => 'array',
         ]);
 
         $skId = $request->sk_id;
-        $tingkatan = 'Cabang'; 
+        $orgId = $request->organisasi_id;
+        $organisasi = Organisasi::findOrFail($orgId);
+        $tingkatan = $organisasi->tingkat; // PC, PAC, PR, PK
         
-        \DB::transaction(function () use ($request, $skId, $tingkatan) {
+        \DB::transaction(function () use ($request, $skId, $orgId, $tingkatan, $organisasi) {
             // We need to save items in a specific order to establish parent_id relationships.
             // Map to store saved IDs: key (from form) => database_id
             $savedIds = [];
@@ -95,12 +115,16 @@ class PengurusController extends Controller
             }
             
             // Helper function to process items
-            $processItem = function($item, $parentMap) use ($skId, $tingkatan, &$savedIds) {
+            $processItem = function($item, $parentMap) use ($skId, $tingkatan, $organisasi, &$savedIds) {
                 $nama = $item['kader_nama'] ?? null;
                
                 // Delete if ID exists but name empty
                 if (isset($item['id']) && empty($nama)) {
-                    Pengurus::destroy($item['id']);
+                    $pengurus = Pengurus::find($item['id']);
+                    if ($pengurus) {
+                        // Optionally remove linked user if needed, but safer to just delete pengurus
+                        $pengurus->delete();
+                    }
                     return null;
                 }
                 
@@ -109,12 +133,51 @@ class PengurusController extends Controller
                 // Create/Find Kader
                 $kader = Kader::firstOrCreate(
                     ['nama_lengkap' => $nama],
-                    ['nik' => rand(100000, 999999)]
+                    ['nik' => rand(100000, 999999)] // Placeholder NIK if new
                 );
+
+                // Auto Generate User Account if HP and DOB are provided
+                $phone = $item['phone'] ?? null;
+                $dob = $item['dob'] ?? null;
+                $userId = null;
+
+                if (!empty($phone) && !empty($dob)) {
+                    // Cek apakah No HP (sebagai email/username) sudah ada
+                    $existingUser = \App\Models\User::where('email', $phone)->first();
+                    
+                    if (!$existingUser) {
+                        // Format DOB to Y-m-d if it comes from html date input, use as password
+                        // Or if it comes as d-m-Y, strip dashes. Using raw $dob as password for simplicity:
+                        $password = \Illuminate\Support\Facades\Hash::make(str_replace('-', '', $dob));
+
+                        // Tentukan Role Sistem berdasarkan Tingkat Organisasi
+                        $roleMap = [
+                            'PC' => 'pc',
+                            'PAC' => 'pac',
+                            'PR' => 'pr',
+                            'PK' => 'pk'
+                        ];
+                        $userRole = $roleMap[$organisasi->tingkat] ?? 'departemen';
+
+                        $newUser = \App\Models\User::create([
+                            'name' => $nama,
+                            'email' => $phone, // Menggunakan NoHP sebagai pengganti Email
+                            'password' => $password,
+                            'role' => $userRole,
+                            'organisasi_id' => $organisasi->id,
+                        ]);
+
+                        // Tautkan User ID ke Kader
+                        $kader->user_id = $newUser->id;
+                        $kader->no_hp = $phone;
+                        $kader->tanggal_lahir = $dob;
+                        $kader->save();
+                    }
+                }
 
                 // Determine Category
                 $kategori = $item['kategori'] ?? 'IPNU';
-                $namaTingkatan = 'PC ' . $kategori;
+                $namaTingkatan = $organisasi->tingkat . ' ' . $kategori . ' ' . $organisasi->nama; // e.g. PAC IPNU Ngasem
 
                 // Determine Parent ID based on Logic
                 $parentId = null;
@@ -159,6 +222,7 @@ class PengurusController extends Controller
 
                 $data = [
                     'kader_id' => $kader->id,
+                    'organisasi_id' => $organisasi->id,
                     'surat_keputusan_id' => $skId,
                     'tingkatan' => $tingkatan,
                     'nama_tingkatan' => $namaTingkatan,

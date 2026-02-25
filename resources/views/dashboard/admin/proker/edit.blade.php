@@ -12,7 +12,7 @@
             </a>
             <h1 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Edit Program Kerja (Admin Mode)</h1>
             <p class="text-sm text-gray-500">Mengedit kegiatan milik PAC:
-                <strong>{{ $program->pac->name ?? 'Unknown' }}</strong></p>
+                <strong>{{ $program->organisasi->nama ?? 'Unknown' }}</strong></p>
         </div>
 
         @if(session('success'))

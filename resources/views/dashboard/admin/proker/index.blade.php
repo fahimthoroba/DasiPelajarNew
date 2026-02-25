@@ -17,12 +17,12 @@
                     class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-emerald-500 focus:ring-emerald-500/20 text-sm">
 
                 <!-- Filter PAC -->
-                <select name="pac_id" onchange="this.form.submit()"
+                <select name="organisasi_id" onchange="this.form.submit()"
                     class="px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 focus:border-emerald-500 focus:ring-emerald-500/20 text-sm min-w-[200px]">
                     <option value="">-- Semua PAC --</option>
-                    @foreach($pacs as $pac)
-                        <option value="{{ $pac->id }}" {{ request('pac_id') == $pac->id ? 'selected' : '' }}>
-                            {{ $pac->name }}
+                    @foreach($organisasis as $org)
+                        <option value="{{ $org->id }}" {{ request('organisasi_id') == $org->id ? 'selected' : '' }}>
+                            {{ $org->nama }}
                         </option>
                     @endforeach
                 </select>
@@ -63,9 +63,9 @@
                                                     <div class="flex items-center gap-2">
                                                         <span
                                                             class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold">
-                                                            {{ substr($program->pac->name ?? '?', 0, 1) }}
+                                                            {{ substr($program->organisasi->nama ?? '?', 0, 1) }}
                                                         </span>
-                                                        {{ $program->pac->name ?? 'Deleted User' }}
+                                                        {{ $program->organisasi->nama ?? 'Tanpa Organisasi' }}
                                                     </div>
                                                 </td>
                                                 <td class="px-6 py-4 text-gray-500 dark:text-gray-400">

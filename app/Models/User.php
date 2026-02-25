@@ -27,23 +27,33 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'departemen_id',
-        // Profil PAC
-        'alamat_sekretariat',
-        'zona_wilayah',
-        'nomor_sp',
-        'masa_khidmat_mulai',
-        'masa_khidmat_selesai',
+        'kader_id',
+        'organisasi_id',
     ];
 
-    public function departemen()
+    public function kader()
     {
-        return $this->belongsTo(Departemen::class, 'departemen_id', 'id');
+        return $this->belongsTo(Kader::class, 'kader_id', 'id');
     }
 
-    public function realisasiPrograms()
+    public function organisasi()
     {
-        return $this->hasMany(RealisasiProgram::class, 'pac_id', 'id');
+        return $this->belongsTo(\App\Models\Organisasi::class, 'organisasi_id', 'id');
+    }
+
+    public function getActiveOrganisasiId()
+    {
+        // For generic PAC accounts (e.g., admin_pac@ipnu.org), they might not have a kader_id but have explicitly assigned organisasi_id
+        if ($this->organisasi_id) return $this->organisasi_id;
+
+        // Otherwise, base it on their active pengurus profile
+        if (!$this->kader_id) return null;
+
+        $pengurus = \App\Models\Pengurus::where('kader_id', $this->kader_id)
+            ->where('is_active', true)
+            ->first();
+
+        return $pengurus ? $pengurus->organisasi_id : null;
     }
 
     /**

@@ -9,7 +9,7 @@ class RealisasiProgram extends Model
     protected $table = 'realisasi_program';
 
     protected $fillable = [
-        'pac_id',
+        'organisasi_id',
         'kategori_program_id',
         'departemen_id',
         'nama_lokal',
@@ -46,9 +46,9 @@ class RealisasiProgram extends Model
         });
     }
 
-    public function pac()
+    public function organisasi()
     {
-        return $this->belongsTo(User::class, 'pac_id', 'id');
+        return $this->belongsTo(Organisasi::class, 'organisasi_id', 'id');
     }
 
     public function kategori()

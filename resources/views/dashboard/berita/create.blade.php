@@ -3,45 +3,8 @@
 @section('title', 'Tulis Berita Baru')
 
 @section('content')
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
-    <script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
-    <style>
-        trix-toolbar [data-trix-button-group="file-tools"] {
-            display: none;
-        }
-
-        .trix-button-group--file-tools {
-            display: none !important;
-        }
-
-        trix-editor {
-            background-color: transparent;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            min-height: 300px;
-        }
-
-        .dark trix-editor {
-            color: #e2e8f0;
-            border-color: #334155;
-        }
-
-        trix-toolbar {
-            background: #f8fafc;
-            border-radius: 0.75rem 0.75rem 0 0;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 0.5rem;
-        }
-
-        .dark trix-toolbar {
-            background: #1e293b;
-            border-color: #334155;
-        }
-
-        .dark .trix-button {
-            filter: invert(1);
-        }
-    </style>
+    <!-- TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
     <div class="mb-6">
         <a href="{{ route('dashboard.berita.index') }}"
@@ -76,8 +39,7 @@
                     <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Konten Berita</label>
                     <div
                         class="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 overflow-hidden">
-                        <input id="konten" type="hidden" name="konten" value="{{ old('konten') }}">
-                        <trix-editor input="konten" placeholder="Mulai menulis cerita..."></trix-editor>
+                        <textarea id="konten" name="konten" placeholder="Mulai menulis cerita...">{{ old('konten') }}</textarea>
                     </div>
                     @error('konten')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -171,5 +133,57 @@
                 }
             }
         }
+
+        tinymce.init({
+            selector: '#konten',
+            plugins: 'image link media autolink lists code table wordcount directionality advlist',
+            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | image link media | code',
+            image_advtab: true,
+            automatic_uploads: true,
+            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                xhr.withCredentials = false;
+                xhr.open('POST', '{{ route("dashboard.berita.upload_image") }}');
+                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+
+                xhr.upload.onprogress = (e) => {
+                    progress(e.loaded / e.total * 100);
+                };
+
+                xhr.onload = () => {
+                    if (xhr.status === 403) {
+                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
+                        return;
+                    }
+                    if (xhr.status < 200 || xhr.status >= 300) {
+                        reject('HTTP Error: ' + xhr.status);
+                        return;
+                    }
+                    const json = JSON.parse(xhr.responseText);
+                    if (!json || typeof json.location != 'string') {
+                        reject('Invalid JSON: ' + xhr.responseText);
+                        return;
+                    }
+                    resolve(json.location);
+                };
+
+                xhr.onerror = () => {
+                    reject('Image upload failed. Code: ' + xhr.status);
+                };
+
+                const formData = new FormData();
+                formData.append('file', blobInfo.blob(), blobInfo.filename());
+                xhr.send(formData);
+            }),
+            file_picker_types: 'image',
+            min_height: 400,
+            skin: document.documentElement.classList.contains('dark') ? 'oxide-dark' : 'oxide',
+            content_css: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+            setup: function (editor) {
+                editor.on('change', function () {
+                    tinymce.triggerSave();
+                });
+            }
+        });
     </script>
 @endsection
