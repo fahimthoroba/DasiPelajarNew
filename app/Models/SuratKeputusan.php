@@ -15,7 +15,7 @@ class SuratKeputusan extends Model
         'judul_sk',
         'tgl_berlaku',
         'tgl_selesai',
-        'status', // Draft, Menunggu Pengesahan PC, Aktif, Demisioner, Ditolak
+        'status', 
         'file_sk_path',
     ];
 

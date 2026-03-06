@@ -4,7 +4,7 @@
 
 @section('content')
     <!-- TinyMCE -->
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
 
     <div class="mb-6">
         <a href="{{ route('dashboard.berita.index') }}"
@@ -143,7 +143,7 @@
             images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
                 const xhr = new XMLHttpRequest();
                 xhr.withCredentials = false;
-                xhr.open('POST', '{{ route("dashboard.berita.upload_image") }}');
+                xhr.open('POST', '{{ route("dashboard.berita.upload_image", [], false) }}');
                 xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
 
                 xhr.upload.onprogress = (e) => {
@@ -176,7 +176,31 @@
                 xhr.send(formData);
             }),
             file_picker_types: 'image',
+            file_picker_callback: function (cb, value, meta) {
+                var input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+
+                input.onchange = function () {
+                    var file = this.files[0];
+                    var reader = new FileReader();
+
+                    reader.onload = function () {
+                        var id = 'blobid' + (new Date()).getTime();
+                        var blobCache =  tinymce.activeEditor.editorUpload.blobCache;
+                        var base64 = reader.result.split(',')[1];
+                        var blobInfo = blobCache.create(id, file, base64);
+                        blobCache.add(blobInfo);
+
+                        cb(blobInfo.blobUri(), { title: file.name });
+                    };
+                    reader.readAsDataURL(file);
+                };
+
+                input.click();
+            },
             min_height: 400,
+            promotion: false,
             skin: document.documentElement.classList.contains('dark') ? 'oxide-dark' : 'oxide',
             content_css: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
             setup: function (editor) {

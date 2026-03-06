@@ -32,7 +32,7 @@ class FixDepartemenSeeder extends Seeder
         
         $ippnu = [
             'Organisasi', 'Kaderisasi', 'DJSMPP', 'Desbor', 'Dakwah', 
-            'Jarkom KPP', 'LKP', 'LKDC', 'LEK'
+            'Jarkom', 'KPP', 'LKP', 'LKDC', 'LEK'
         ];
         
         // Let's loop and update/create.
