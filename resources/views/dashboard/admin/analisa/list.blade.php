@@ -32,7 +32,7 @@
                         @forelse($programs as $p)
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                             <td class="px-6 py-4 font-bold text-emerald-600">
-                                {{ $p->pac->name ?? 'Unknown PAC' }}
+                                {{ $p->organisasi->nama ?? 'Unknown' }}
                             </td>
                             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">
                                 {{ $p->nama_lokal }}
@@ -56,10 +56,14 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <a href="{{ route('dashboard.admin.analisa.detail', $p->pac_id) }}" 
-                                   class="text-blue-600 hover:underline text-xs">
-                                    Lihat PAC
-                                </a>
+                                @if($p->organisasi_id)
+                                    <a href="{{ route('dashboard.admin.analisa.detail', $p->organisasi_id) }}" 
+                                       class="text-blue-600 hover:underline text-xs">
+                                        Lihat PAC
+                                    </a>
+                                @else
+                                    <span class="text-gray-400 text-xs">-</span>
+                                @endif
                             </td>
                         </tr>
                         @empty

@@ -127,13 +127,12 @@ class AnalisaController extends Controller
 
 
         // 6. Calendar Heatmap Data (GitHub Style) - Filtered by Year
-        $dailyCounts = RealisasiProgram::join('organisasis', 'realisasi_program.organisasi_id', '=', 'organisasis.id')
-            ->select(
-                DB::raw('DATE(realisasi_program.tgl_mulai) as date'),
+        // Menampilkan SEMUA program kerja agar calendar map tidak kosong
+        $dailyCounts = RealisasiProgram::select(
+                DB::raw('DATE(tgl_mulai) as date'),
                 DB::raw('COUNT(*) as count')
             )
-            ->where('organisasis.tingkat', 'PAC')
-            ->whereYear('realisasi_program.tgl_mulai', $year) // Updated filter
+            ->whereYear('tgl_mulai', $year) // Updated filter
             ->groupBy('date')
             ->pluck('count', 'date')
             ->toArray();

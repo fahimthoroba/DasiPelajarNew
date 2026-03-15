@@ -20,6 +20,10 @@ class DashboardController extends Controller
             return redirect()->route('dashboard.departemen.index');
         }
 
+        if ($user->role === 'dep_kaderisasi') {
+            return redirect()->route('dashboard.kaderisasi.form.index');
+        }
+
         $stats = [];
 
         if ($user->role === 'sekretaris' || $user->role === 'admin') {

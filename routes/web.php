@@ -29,6 +29,10 @@ Route::get('/event/{token}', [\App\Http\Controllers\EventController::class, 'sho
 Route::post('/event/{token}', [\App\Http\Controllers\EventController::class, 'store'])->name('public.event.store');
 Route::get('/api/check-nia', [\App\Http\Controllers\EventController::class, 'checkNia'])->name('public.check-nia');
 
+// Public Form Pendaftaran Kegiatan
+Route::get('/form/{slug}', [\App\Http\Controllers\Layanan\FormPendaftaranController::class, 'show'])->name('layanan.form.show');
+Route::post('/form/{slug}', [\App\Http\Controllers\Layanan\FormPendaftaranController::class, 'submit'])->name('layanan.form.submit');
+
 // Auth Routes
 Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.post');
@@ -93,6 +97,13 @@ Route::middleware(['auth'])->group(function () {
     // PAC Modules
     Route::group(['prefix' => 'dashboard/pac', 'as' => 'dashboard.pac.'], function () {
         Route::resource('proker', \App\Http\Controllers\Pac\RealisasiProgramController::class);
+    });
+
+    // Kaderisasi Modules
+    Route::group(['prefix' => 'dashboard/kaderisasi', 'as' => 'dashboard.kaderisasi.', 'middleware' => 'role:admin,pac,dep_kaderisasi,pr,pk'], function () {
+        Route::resource('form', \App\Http\Controllers\Kaderisasi\FormKegiatanController::class);
+        Route::get('form/{id}/export-excel', [\App\Http\Controllers\Kaderisasi\FormKegiatanController::class, 'exportExcel'])->name('form.export-excel');
+        Route::get('form/{id}/download-files', [\App\Http\Controllers\Kaderisasi\FormKegiatanController::class, 'downloadFiles'])->name('form.download-files');
     });
 
     // Admin Modules (Custom View)

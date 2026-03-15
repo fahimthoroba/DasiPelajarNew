@@ -65,7 +65,7 @@
             <!-- Menu -->
             <nav class="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
 
-                @if(auth()->user()->role !== 'dep_organisasi')
+                @if(!in_array(auth()->user()->role, ['dep_organisasi', 'dep_kaderisasi']))
                     <p class="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Main</p>
 
                     <a href="{{ route('dashboard') }}"
@@ -173,6 +173,16 @@
                         <span class="font-medium">Manajemen Pengguna</span>
                     </a>
                     @endif
+                @endif
+
+                <!-- Dep. Kaderisasi Module -->
+                @if(in_array(auth()->user()->role, ['admin', 'pac', 'dep_kaderisasi', 'pr', 'pk']))
+                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Dep. Kaderisasi</p>
+                    <a href="{{ route('dashboard.kaderisasi.form.index') }}"
+                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.kaderisasi.form.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
+                        <span class="material-symbols-outlined">how_to_reg</span>
+                        <span class="font-medium">Form Pendaftaran</span>
+                    </a>
                 @endif
 
                 <!-- Departemen Module -->
