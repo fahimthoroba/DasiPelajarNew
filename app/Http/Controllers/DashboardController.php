@@ -16,12 +16,16 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->role === 'departemen') {
+        $deptRoles = [
+            'dep_organisasi', 'dep_kaderisasi', 'dep_dakwah', 'dep_seni', 'dep_jaringan',
+            'dep_pengorg', 'dep_media',
+            'lmb_lpp', 'lmb_lekas', 'lmb_lan', 'lmb_lkpt', 'lmb_cbp',
+            'bdn_bscc', 'bdn_bsrc',
+            'lmb_kpp', 'lmb_konseling', 'lmb_ekraf', 'lmb_kdc',
+            'departemen', // alias sementara
+        ];
+        if (in_array($user->role, $deptRoles)) {
             return redirect()->route('dashboard.departemen.index');
-        }
-
-        if ($user->role === 'dep_kaderisasi') {
-            return redirect()->route('dashboard.kaderisasi.form.index');
         }
 
         $stats = [];

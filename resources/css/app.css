@@ -1,3 +1,77 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================
+   DASI PELAJAR — Design System CSS Variables
+   ============================================ */
+
+:root {
+    /* Background */
+    --dp-bg-page:          #f4f4f4;
+    --dp-bg-surface:       #ffffff;
+    --dp-bg-surface-2:     rgba(8, 51, 44, 0.04);
+    --dp-bg-primary:       #08332c;
+    --dp-bg-primary-hover: #0f4a3a;
+
+    /* Text */
+    --dp-text-primary:     #1a1a1a;
+    --dp-text-secondary:   #4a6b60;
+    --dp-text-on-primary:  #f4f4f4;
+    --dp-text-gold:        #ba9e6f;
+    --dp-text-gold-bright: #d4bc91;
+
+    /* Border */
+    --dp-border:           rgba(8, 51, 44, 0.10);
+    --dp-border-strong:    rgba(8, 51, 44, 0.20);
+    --dp-border-gold:      rgba(186, 158, 111, 0.40);
+
+    /* Gold */
+    --dp-gold:             #ba9e6f;
+    --dp-gold-light:       #d4bc91;
+    --dp-gold-tint:        rgba(186, 158, 111, 0.12);
+    --dp-primary-tint:     rgba(8, 51, 44, 0.08);
+
+    /* Status */
+    --dp-danger:           #e8463a;
+    --dp-danger-tint:      #fde8e7;
+    --dp-status-done:      #08332c;
+    --dp-status-on:        #ba9e6f;
+    --dp-status-plan:      rgba(8, 51, 44, 0.20);
+    --dp-status-fail:      #e8463a;
+}
+
+.dark {
+    /* Background */
+    --dp-bg-page:          #051a12;
+    --dp-bg-surface:       #0f2a1e;
+    --dp-bg-surface-2:     rgba(186, 158, 111, 0.05);
+    --dp-bg-primary:       #051a12;
+    --dp-bg-primary-hover: #0a1f16;
+
+    /* Text */
+    --dp-text-primary:     #e8e8e8;
+    --dp-text-secondary:   #7aab96;
+    --dp-text-on-primary:  #f4f4f4;
+    --dp-text-gold:        #ba9e6f;
+    --dp-text-gold-bright: #d4bc91;
+
+    /* Border */
+    --dp-border:           rgba(186, 158, 111, 0.12);
+    --dp-border-strong:    rgba(186, 158, 111, 0.25);
+    --dp-border-gold:      rgba(186, 158, 111, 0.30);
+
+    /* Gold */
+    --dp-gold:             #ba9e6f;
+    --dp-gold-light:       #d4bc91;
+    --dp-gold-tint:        rgba(186, 158, 111, 0.15);
+    --dp-primary-tint:     rgba(8, 51, 44, 0.50);
+
+    /* Status */
+    --dp-danger:           #e8463a;
+    --dp-danger-tint:      rgba(232, 70, 58, 0.15);
+    --dp-status-done:      #7aab96;
+    --dp-status-on:        #ba9e6f;
+    --dp-status-plan:      rgba(186, 158, 111, 0.20);
+    --dp-status-fail:      #e8463a;
+}

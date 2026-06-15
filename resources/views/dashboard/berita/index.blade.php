@@ -3,133 +3,269 @@
 @section('title', 'Manajemen Berita')
 
 @section('content')
-    <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Berita & Artikel</h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Kelola konten berita yang akan tampil di website.</p>
+
+{{-- Stats Cards --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+    @php
+        $statItems = [
+            ['label' => 'Total Berita', 'value' => $stats['total'],     'color' => 'var(--dp-text-primary)'],
+            ['label' => 'Published',    'value' => $stats['published'], 'color' => 'var(--dp-status-done)'],
+            ['label' => 'Draft',        'value' => $stats['draft'],     'color' => 'var(--dp-gold)'],
+            ['label' => 'Arsip',        'value' => $stats['archived'],  'color' => 'var(--dp-text-secondary)'],
+        ];
+    @endphp
+    @foreach($statItems as $s)
+        <div class="rounded-xl px-4 py-4" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+            <div class="text-[10px] uppercase tracking-widest font-semibold mb-2" style="color: var(--dp-text-secondary);">
+                {{ $s['label'] }}
+            </div>
+            <div class="text-3xl font-bold font-display leading-none" style="color: {{ $s['color'] }};">
+                {{ $s['value'] }}
+            </div>
         </div>
-        <a href="{{ route('dashboard.berita.create') }}"
-            class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-5 rounded-xl transition-colors shadow-lg shadow-emerald-500/30">
-            <span class="material-symbols-outlined">add</span>
-            Tambah Berita
-        </a>
+    @endforeach
+</div>
+
+{{-- Toolbar --}}
+<div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-5">
+    <form method="GET" action="{{ route('dashboard.berita.index') }}"
+          class="flex flex-col sm:flex-row gap-2 flex-1">
+        <input type="text" name="q" value="{{ request('q') }}"
+               placeholder="Cari judul berita..."
+               class="flex-1 px-4 py-2.5 rounded-lg text-sm outline-none transition-colors"
+               style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border); color: var(--dp-text-primary);"
+               onfocus="this.style.borderColor='var(--dp-gold)'"
+               onblur="this.style.borderColor='var(--dp-border)'">
+
+        <select name="status"
+                class="px-3 py-2.5 rounded-lg text-sm outline-none"
+                style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+            <option value="">Semua Status</option>
+            <option value="published" {{ request('status') === 'published' ? 'selected' : '' }}>Published</option>
+            <option value="draft"     {{ request('status') === 'draft'     ? 'selected' : '' }}>Draft</option>
+            <option value="archived"  {{ request('status') === 'archived'  ? 'selected' : '' }}>Arsip</option>
+        </select>
+
+        <select name="kategori"
+                class="px-3 py-2.5 rounded-lg text-sm outline-none"
+                style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+            <option value="">Semua Kategori</option>
+            @foreach($kategoris as $k)
+                <option value="{{ $k->id }}" {{ request('kategori') == $k->id ? 'selected' : '' }}>
+                    {{ $k->nama }}
+                </option>
+            @endforeach
+        </select>
+
+        <button type="submit"
+                class="px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+            Filter
+        </button>
+
+        @if(request()->hasAny(['q', 'status', 'kategori']))
+            <a href="{{ route('dashboard.berita.index') }}"
+               class="px-4 py-2.5 rounded-lg text-sm font-semibold text-center transition-colors"
+               style="background: var(--dp-danger-tint); border: 1px solid var(--dp-danger); color: var(--dp-danger);">
+                Reset
+            </a>
+        @endif
+    </form>
+
+    <a href="{{ route('dashboard.berita.create') }}"
+       class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold shrink-0 transition-colors"
+       style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);"
+       onmouseover="this.style.background='var(--dp-bg-primary-hover)'"
+       onmouseout="this.style.background='var(--dp-bg-primary)'">
+        <span class="material-symbols-outlined text-lg">add</span>
+        Tulis Berita
+    </a>
+</div>
+
+{{-- Alert --}}
+@if(session('success'))
+    <div class="mb-4 px-4 py-3 rounded-lg flex items-center gap-3 text-sm"
+         style="background: var(--dp-primary-tint); border: 1px solid var(--dp-border-strong); color: var(--dp-text-primary);">
+        <span class="material-symbols-outlined text-lg shrink-0" style="color: var(--dp-status-done);">check_circle</span>
+        {{ session('success') }}
+    </div>
+@endif
+
+{{-- Berita List --}}
+<div class="rounded-xl overflow-hidden" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+
+    {{-- Table header --}}
+    <div class="hidden lg:grid grid-cols-[2fr_1fr_auto_auto] items-center px-5 py-3 text-[10px] font-bold uppercase tracking-widest"
+         style="background: var(--dp-bg-surface-2); border-bottom: 1px solid var(--dp-border); color: var(--dp-text-secondary);">
+        <span>Berita</span>
+        <span>Kategori & Penulis</span>
+        <span>Status</span>
+        <span class="text-right pr-1">Aksi</span>
     </div>
 
-    <!-- success Alert -->
-    @if(session('success'))
-        <div
-            class="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-3 border border-emerald-100 dark:border-emerald-800">
-            <span class="material-symbols-outlined">check_circle</span>
-            {{ session('success') }}
+    @forelse($beritas as $berita)
+        <div class="flex items-start gap-4 px-4 py-4 transition-colors"
+             style="border-bottom: 1px solid var(--dp-border);"
+             onmouseover="this.style.background='var(--dp-primary-tint)'"
+             onmouseout="this.style.background='transparent'">
+
+            {{-- Thumbnail --}}
+            <div class="w-20 h-14 lg:w-24 lg:h-16 rounded-lg overflow-hidden shrink-0"
+                 style="background: var(--dp-bg-surface-2);">
+                @if($berita->thumbnail)
+                    <img src="{{ asset('storage/' . $berita->thumbnail) }}"
+                         class="w-full h-full object-cover" alt="{{ $berita->judul }}">
+                @else
+                    <div class="w-full h-full flex items-center justify-center">
+                        <span class="material-symbols-outlined text-2xl"
+                              style="color: var(--dp-border-strong);">image</span>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Content --}}
+            <div class="flex-1 min-w-0">
+                {{-- Badges --}}
+                <div class="flex items-center gap-1.5 flex-wrap mb-1.5">
+                    @php
+                        $statusStyle = match($berita->status) {
+                            'published' => 'background:rgba(8,51,44,0.10);color:var(--dp-status-done)',
+                            'draft'     => 'background:rgba(186,158,111,0.15);color:var(--dp-gold)',
+                            default     => 'background:var(--dp-bg-surface-2);color:var(--dp-text-secondary)',
+                        };
+                        $statusLabel = match($berita->status) {
+                            'published' => 'Published',
+                            'draft'     => 'Draft',
+                            default     => 'Arsip',
+                        };
+                    @endphp
+                    <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                          style="{{ $statusStyle }}">{{ $statusLabel }}</span>
+
+                    @if($berita->is_headline)
+                        <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                              style="background:rgba(186,158,111,0.20); color:var(--dp-gold);">
+                            ★ Headline
+                        </span>
+                    @endif
+
+                    @if($berita->jenis && $berita->jenis !== 'berita')
+                        <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded"
+                              style="background: var(--dp-bg-surface-2); color: var(--dp-text-secondary);">
+                            {{ $berita->jenis }}
+                        </span>
+                    @endif
+                </div>
+
+                {{-- Judul --}}
+                <div class="font-display font-bold text-sm lg:text-base leading-tight line-clamp-1 mb-1"
+                     style="color: var(--dp-text-primary);">
+                    {{ $berita->judul }}
+                </div>
+
+                {{-- Meta --}}
+                <div class="text-xs flex items-center gap-2 flex-wrap" style="color: var(--dp-text-secondary);">
+                    <span>{{ $berita->kategori->nama ?? 'Tanpa Kategori' }}</span>
+                    <span>·</span>
+                    <span>{{ $berita->user->name ?? '-' }}</span>
+                    <span>·</span>
+                    <span>{{ $berita->created_at->format('d M Y') }}</span>
+                    @if($berita->views)
+                        <span>·</span>
+                        <span>{{ number_format($berita->views) }} views</span>
+                    @endif
+                </div>
+
+                {{-- Tags --}}
+                @if($berita->tags->isNotEmpty())
+                    <div class="flex gap-1 flex-wrap mt-1.5">
+                        @foreach($berita->tags as $tag)
+                            <span class="text-[10px] px-1.5 py-0.5 rounded"
+                                  style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                                #{{ $tag->nama }}
+                            </span>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex items-center gap-0.5 shrink-0">
+                @if($berita->status === 'published')
+                    <a href="{{ route('berita.show', $berita->slug) }}" target="_blank"
+                       title="Lihat di website"
+                       class="p-2 rounded-lg transition-colors"
+                       style="color: var(--dp-text-secondary);"
+                       onmouseover="this.style.background='var(--dp-primary-tint)'; this.style.color='var(--dp-bg-primary)'"
+                       onmouseout="this.style.background='transparent'; this.style.color='var(--dp-text-secondary)'">
+                        <span class="material-symbols-outlined text-lg">open_in_new</span>
+                    </a>
+                @endif
+
+                <a href="{{ route('dashboard.berita.edit', $berita) }}"
+                   title="Edit"
+                   class="p-2 rounded-lg transition-colors"
+                   style="color: var(--dp-text-secondary);"
+                   onmouseover="this.style.background='var(--dp-primary-tint)'; this.style.color='var(--dp-bg-primary)'"
+                   onmouseout="this.style.background='transparent'; this.style.color='var(--dp-text-secondary)'">
+                    <span class="material-symbols-outlined text-lg">edit_square</span>
+                </a>
+
+                <form action="{{ route('dashboard.berita.destroy', $berita) }}" method="POST"
+                      onsubmit="return confirm('Hapus berita ini secara permanen?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            title="Hapus"
+                            class="p-2 rounded-lg transition-colors"
+                            style="color: var(--dp-text-secondary);"
+                            onmouseover="this.style.background='var(--dp-danger-tint)'; this.style.color='var(--dp-danger)'"
+                            onmouseout="this.style.background='transparent'; this.style.color='var(--dp-text-secondary)'">
+                        <span class="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    @empty
+        <div class="flex flex-col items-center justify-center py-20 text-center px-4">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                 style="background: var(--dp-bg-surface-2);">
+                <span class="material-symbols-outlined text-3xl" style="color: var(--dp-text-secondary);">newspaper</span>
+            </div>
+            <div class="font-display font-bold text-lg mb-1" style="color: var(--dp-text-primary);">
+                Belum ada berita
+            </div>
+            <div class="text-sm mb-5" style="color: var(--dp-text-secondary);">
+                @if(request()->hasAny(['q','status','kategori']))
+                    Tidak ada berita yang cocok dengan filter.
+                @else
+                    Mulai dengan menulis berita pertama.
+                @endif
+            </div>
+            @if(request()->hasAny(['q','status','kategori']))
+                <a href="{{ route('dashboard.berita.index') }}"
+                   class="text-sm font-semibold px-4 py-2 rounded-lg"
+                   style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+                    Hapus Filter
+                </a>
+            @else
+                <a href="{{ route('dashboard.berita.create') }}"
+                   class="text-sm font-bold px-5 py-2.5 rounded-lg"
+                   style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);">
+                    Tulis Berita
+                </a>
+            @endif
+        </div>
+    @endforelse
+
+    {{-- Pagination --}}
+    @if($beritas->hasPages())
+        <div class="px-5 py-4" style="border-top: 1px solid var(--dp-border);">
+            {{ $beritas->links('pagination::tailwind') }}
         </div>
     @endif
 
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead
-                    class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">
-                    <tr>
-                        <th class="px-6 py-4">Berita</th>
-                        <th class="px-6 py-4">Kategori</th>
-                        <th class="px-6 py-4">Status & Tanggal</th>
-                        <th class="px-6 py-4 text-right">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-                    @forelse($beritas as $berita)
-                        <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden shrink-0">
-                                        @if($berita->thumbnail)
-                                            <img src="{{ asset('storage/' . $berita->thumbnail) }}"
-                                                class="w-full h-full object-cover">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                                <span class="material-symbols-outlined text-lg">image</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="max-w-xs">
-                                        <div class="font-bold text-gray-900 dark:text-white line-clamp-2 leading-tight mb-1">
-                                            {{ $berita->judul }}</div>
-                                        <div class="text-xs text-gray-500">Oleh: {{ $berita->user->name ?? 'Unknown' }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
-                                    {{ $berita->kategori->nama ?? 'Umum' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-col gap-1">
-                                    <div>
-                                        @if($berita->status == 'published')
-                                            <span
-                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Published
-                                            </span>
-                                        @elseif($berita->status == 'draft')
-                                            <span
-                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Draft
-                                            </span>
-                                        @else
-                                            <span
-                                                class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-600 dark:text-gray-400">
-                                                <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span> Archived
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <span class="text-xs text-gray-400">
-                                        {{ $berita->created_at->format('d M Y') }}
-                                    </span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="inline-flex items-center gap-2">
-                                    <a href="{{ route('dashboard.berita.edit', $berita) }}"
-                                        class="p-2 rounded-lg text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 transition-colors"
-                                        title="Edit">
-                                        <span class="material-symbols-outlined">edit_square</span>
-                                    </a>
-                                    <form action="{{ route('dashboard.berita.destroy', $berita) }}" method="POST"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus berita ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
-                                            title="Hapus">
-                                            <span class="material-symbols-outlined">delete</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-24 text-center">
-                                <div
-                                    class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-400 mb-4">
-                                    <span class="material-symbols-outlined text-3xl">newspaper</span>
-                                </div>
-                                <h3 class="text-gray-900 dark:text-white font-bold mb-1">Belum ada berita</h3>
-                                <p class="text-gray-500 text-sm">Mulai dengan membuat berita baru.</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+</div>
 
-        <!-- Pagination -->
-        @if($beritas->hasPages())
-            <div class="px-6 py-4 border-t border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-gray-800/50">
-                {{ $beritas->links('pagination::tailwind') }}
-            </div>
-        @endif
-    </div>
 @endsection

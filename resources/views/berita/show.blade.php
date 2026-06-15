@@ -7,206 +7,480 @@
     <title>{{ $berita->judul }} - {{ $pengaturan->nama_website ?? 'PC IPNU IPPNU Kediri' }}</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
+    <!-- OG Meta -->
+    <meta property="og:title" content="{{ $berita->judul }}">
+    <meta property="og:description" content="{{ $berita->ringkasan_or_excerpt }}">
+    @if($berita->thumbnail)
+    <meta property="og:image" content="{{ asset('storage/' . $berita->thumbnail) }}">
+    @endif
+
     <!-- Fonts -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        emerald: { 900: '#022C22', 800: '#064E3B', 600: '#059669', 500: '#10b981', 400: '#34D399', 50: '#ecfdf5' },
-                        amber: { 900: '#78350F', 700: '#B45309', 400: '#FBBF24', 50: '#fffbeb' },
-                        gold: { 500: '#C5A059', 600: '#9F803A' },
-                        surface: { light: '#F8F8F8', card: '#FFFFFF', dark: '#121212' }
-                    },
-                    fontFamily: {
-                        display: ['Outfit', 'sans-serif'],
-                        body: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
-        .prose h1,
-        .prose h2,
-        .prose h3 {
-            font-family: 'Outfit', sans-serif;
-        }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* Prose Dark Mode fix */
-        :is(.dark .prose) {
-            color: #d1d5db;
-        }
+        /* Prose styling */
+        .prose-dp { line-height: 1.85; font-size: 1.05rem; }
+        .prose-dp h1, .prose-dp h2, .prose-dp h3, .prose-dp h4 { font-family: 'Outfit', sans-serif; font-weight: 700; margin-top: 1.8em; margin-bottom: 0.6em; color: var(--dp-text-primary); }
+        .prose-dp h2 { font-size: 1.5rem; }
+        .prose-dp h3 { font-size: 1.25rem; }
+        .prose-dp p { margin-bottom: 1.2em; color: var(--dp-text-primary); opacity: 0.85; }
+        .prose-dp img { border-radius: 8px; margin: 1.5em 0; }
+        .prose-dp blockquote { border-left: 3px solid var(--dp-gold); padding-left: 1em; margin: 1.5em 0; font-style: italic; color: var(--dp-text-secondary); }
+        .prose-dp a { color: var(--dp-gold); text-decoration: underline; }
+        .prose-dp ul, .prose-dp ol { padding-left: 1.5em; margin-bottom: 1.2em; }
+        .prose-dp li { margin-bottom: 0.4em; }
+        .prose-dp strong { color: var(--dp-text-primary); }
 
-        :is(.dark .prose h1),
-        :is(.dark .prose h2),
-        :is(.dark .prose h3),
-        :is(.dark .prose h4),
-        :is(.dark .prose strong) {
-            color: #f9fafb;
+        /* Sticky sidebar */
+        .sticky-sidebar { position: sticky; top: 6rem; }
+
+        /* Comment avatar */
+        .avatar-initial {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 14px; text-transform: uppercase;
+            background: var(--dp-bg-primary); color: var(--dp-gold);
         }
     </style>
+
     @include('partials.theme-init')
 </head>
 
-<body
-    class="bg-surface-light dark:bg-[#051111] text-gray-900 dark:text-gray-100 font-body antialiased transition-colors duration-300">
+<body class="font-body antialiased transition-colors duration-300"
+    style="background: var(--dp-bg-page); color: var(--dp-text-primary);">
 
     @include('partials.navbar')
 
-    <main class="pt-32 pb-24 px-4 sm:px-6 relative min-h-screen">
-        <!-- Abstract Background -->
-        <div
-            class="absolute top-20 left-0 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-full blur-3xl -translate-x-1/2 pointer-events-none">
-        </div>
-        <div
-            class="absolute top-40 right-0 w-96 h-96 bg-amber-500/5 dark:bg-amber-500/10 rounded-full blur-3xl translate-x-1/2 pointer-events-none">
-        </div>
+    <main class="pt-24 pb-16 px-4 sm:px-6 min-h-screen">
+        <div class="max-w-7xl mx-auto">
 
-        <div class="max-w-7xl mx-auto relative z-10">
-            <!-- Breadcrumb -->
-            <nav class="flex mb-8 text-sm text-gray-500 animate-fade-in-up">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <a href="{{ route('home') }}"
-                            class="inline-flex items-center hover:text-emerald-800 transition-colors">
-                            <span class="material-symbols-outlined text-lg mr-1">home</span>
-                            Home
-                        </a>
-                    </li>
-                    <li>
-                        <div class="flex items-center">
-                            <span class="material-symbols-outlined text-lg">chevron_right</span>
-                            <a href="{{ route('berita.index') }}"
-                                class="ml-1 hover:text-emerald-800 dark:hover:text-emerald-400 transition-colors">Berita</a>
-                        </div>
-                    </li>
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <span class="material-symbols-outlined text-lg">chevron_right</span>
-                            <span
-                                class="ml-1 text-gray-900 dark:text-gray-100 font-medium truncate max-w-[200px]">{{ \Illuminate\Support\Str::limit($berita->judul, 20) }}</span>
-                        </div>
-                    </li>
+            {{-- Breadcrumb --}}
+            <nav class="mb-6 text-sm" style="color: var(--dp-text-secondary);">
+                <ol class="flex items-center flex-wrap gap-1">
+                    <li><a href="{{ route('home') }}" class="hover:underline" style="color: var(--dp-text-secondary);">Beranda</a></li>
+                    <li><span class="material-symbols-outlined text-sm align-middle">chevron_right</span></li>
+                    <li><a href="{{ route('berita.index') }}" class="hover:underline" style="color: var(--dp-text-secondary);">Berita</a></li>
+                    <li><span class="material-symbols-outlined text-sm align-middle">chevron_right</span></li>
+                    <li><a href="{{ route('berita.index') }}" class="hover:underline" style="color: var(--dp-gold);">{{ $berita->kategori?->nama ?? 'Umum' }}</a></li>
                 </ol>
             </nav>
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
-                <!-- Main Content -->
-                <div class="lg:col-span-8">
-                    <article
-                        class="bg-white dark:bg-gray-800 rounded-3xl p-6 md:p-10 shadow-xl shadow-gray-100 dark:shadow-none border border-gray-100 dark:border-white/10 transition-colors">
-                        <!-- Header -->
-                        <div class="mb-8 border-b border-gray-100 dark:border-white/10 pb-8">
-                            <div
-                                class="flex flex-wrap items-center gap-4 text-xs md:text-sm text-gray-500 dark:text-gray-400 mb-6">
-                                <span
-                                    class="bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-full font-bold uppercase tracking-wider text-[10px] border border-emerald-100 dark:border-white/5">
-                                    {{ $berita->kategoriBerita->nama_kategori ?? 'Berita' }}
-                                </span>
-                                <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[16px]">calendar_today</span>
-                                    {{ \Carbon\Carbon::parse($berita->tgl_publish)->translatedFormat('d F Y') }}
-                                </span>
-                                <span class="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600"></span>
-                                <span class="flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[16px]">person</span>
-                                    {{ $berita->user->name ?? 'Admin' }}
-                                </span>
-                            </div>
+            <div class="flex flex-col lg:flex-row gap-8">
 
-                            <h1
-                                class="font-display font-black text-3xl md:text-4xl lg:text-5xl text-gray-900 dark:text-white leading-tight mb-6">
-                                {{ $berita->judul }}
-                            </h1>
+                {{-- ═══════════════════════════════════════════
+                     KONTEN UTAMA (Left)
+                ═══════════════════════════════════════════ --}}
+                <article class="flex-1 min-w-0">
+
+                    {{-- Article Header --}}
+                    <header class="mb-6">
+                        {{-- Kategori badge --}}
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded"
+                                style="background: var(--dp-bg-primary); color: var(--dp-gold);">
+                                {{ $berita->kategori?->nama ?? 'Berita' }}
+                            </span>
+                            @if($berita->jenis && $berita->jenis !== 'berita')
+                            <span class="inline-block px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded"
+                                style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                                {{ ucfirst($berita->jenis) }}
+                            </span>
+                            @endif
                         </div>
 
-                        <!-- Hero Image -->
-                        @if($berita->thumbnail)
-                            <div class="mb-10 rounded-2xl overflow-hidden relative group">
-                                <div
-                                    class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10">
-                                </div>
-                                <img src="{{ asset('storage/' . $berita->thumbnail) }}" alt="{{ $berita->judul }}"
-                                    class="w-full object-cover aspect-video group-hover:scale-105 transition-transform duration-700">
-                            </div>
+                        {{-- Title --}}
+                        <h1 class="font-display font-black text-2xl md:text-3xl lg:text-4xl leading-tight mb-4"
+                            style="color: var(--dp-text-primary);">
+                            {{ $berita->judul }}
+                        </h1>
+
+                        {{-- Meta info --}}
+                        <div class="flex flex-wrap items-center gap-4 text-sm pb-5 mb-6"
+                            style="color: var(--dp-text-secondary); border-bottom: 1px solid var(--dp-border);">
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-base">person</span>
+                                {{ $berita->user?->name ?? 'Redaksi' }}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-base">calendar_today</span>
+                                {{ $berita->tgl_publish?->translatedFormat('d F Y') }}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-base">visibility</span>
+                                {{ number_format($berita->views) }}x dibaca
+                            </span>
+                            @if($berita->sumber)
+                            <span class="flex items-center gap-1">
+                                <span class="material-symbols-outlined text-base">link</span>
+                                Sumber: {{ $berita->sumber }}
+                            </span>
+                            @endif
+                        </div>
+                    </header>
+
+                    {{-- Thumbnail --}}
+                    @if($berita->thumbnail)
+                    <div class="mb-8 rounded-lg overflow-hidden" style="border: 1px solid var(--dp-border);">
+                        <img src="{{ asset('storage/' . $berita->thumbnail) }}"
+                            alt="{{ $berita->judul }}"
+                            class="w-full object-cover aspect-video">
+                    </div>
+                    @endif
+
+                    {{-- Ringkasan --}}
+                    @if($berita->ringkasan)
+                    <div class="mb-8 p-4 rounded-lg text-sm italic"
+                        style="background: var(--dp-bg-surface-2); border-left: 3px solid var(--dp-gold); color: var(--dp-text-secondary);">
+                        {{ $berita->ringkasan }}
+                    </div>
+                    @endif
+
+                    {{-- Article Body --}}
+                    <div class="prose-dp mb-10" style="color: var(--dp-text-primary);">
+                        {!! $berita->konten !!}
+                    </div>
+
+                    {{-- Tags --}}
+                    @if($berita->tags->count())
+                    <div class="flex flex-wrap items-center gap-2 mb-8 pb-6"
+                        style="border-bottom: 1px solid var(--dp-border);">
+                        <span class="material-symbols-outlined text-base" style="color: var(--dp-text-secondary);">sell</span>
+                        @foreach($berita->tags as $tag)
+                        <span class="inline-block px-3 py-1 rounded-full text-xs font-medium"
+                            style="background: var(--dp-primary-tint); color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
+                            #{{ $tag->nama }}
+                        </span>
+                        @endforeach
+                    </div>
+                    @endif
+
+                    {{-- Share --}}
+                    <div class="flex items-center gap-3 mb-10 pb-8"
+                        style="border-bottom: 1px solid var(--dp-border);">
+                        <span class="text-sm font-semibold" style="color: var(--dp-text-secondary);">Bagikan:</span>
+                        @php $shareUrl = urlencode(request()->url()); $shareTitle = urlencode($berita->judul); @endphp
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ $shareUrl }}" target="_blank" rel="noopener"
+                            class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-opacity hover:opacity-80"
+                            style="background: #1877F2; color: #fff;">fb</a>
+                        <a href="https://twitter.com/intent/tweet?url={{ $shareUrl }}&text={{ $shareTitle }}" target="_blank" rel="noopener"
+                            class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-opacity hover:opacity-80"
+                            style="background: #1DA1F2; color: #fff;">tw</a>
+                        <a href="https://api.whatsapp.com/send?text={{ $shareTitle }}%20{{ $shareUrl }}" target="_blank" rel="noopener"
+                            class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-opacity hover:opacity-80"
+                            style="background: #25D366; color: #fff;">wa</a>
+                        <button onclick="navigator.clipboard.writeText(window.location.href);this.textContent='Tersalin!';setTimeout(()=>this.innerHTML='<span class=\'material-symbols-outlined text-base\'>content_copy</span>',2000)"
+                            class="w-9 h-9 rounded-full flex items-center justify-center transition-opacity hover:opacity-80"
+                            style="background: var(--dp-bg-surface-2); color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
+                            <span class="material-symbols-outlined text-base">content_copy</span>
+                        </button>
+                    </div>
+
+                    {{-- ═══════════════════════════════════════
+                         KOMENTAR
+                    ═══════════════════════════════════════ --}}
+                    <section class="mb-12" id="komentar">
+                        <div class="flex items-center justify-between mb-6"
+                            style="border-top: 3px solid var(--dp-bg-primary); padding-top: 0.75rem;">
+                            <h2 class="font-display font-bold text-xl" style="color: var(--dp-text-primary);">
+                                Komentar ({{ $komentars->count() }})
+                            </h2>
+                        </div>
+
+                        {{-- Flash message --}}
+                        @if(session('komentar_success'))
+                        <div class="mb-6 p-4 rounded-lg text-sm font-medium"
+                            style="background: var(--dp-gold-tint); color: var(--dp-bg-primary); border: 1px solid var(--dp-border-gold);">
+                            <span class="material-symbols-outlined text-base align-middle mr-1">check_circle</span>
+                            {{ session('komentar_success') }}
+                        </div>
                         @endif
 
-                        <!-- Body -->
-                        <div
-                            class="prose prose-lg prose-emerald max-w-none text-gray-600 dark:text-gray-300 leading-loose prose-headings:text-gray-900 dark:prose-headings:text-white prose-img:rounded-xl">
-                            {!! $berita->konten !!}
+                        {{-- Form komentar --}}
+                        <div class="rounded-lg p-5 mb-8"
+                            style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                            <h3 class="font-display font-bold text-base mb-4" style="color: var(--dp-text-primary);">
+                                Tulis Komentar
+                            </h3>
+                            <form action="{{ route('berita.komentar.store', $berita->slug) }}" method="POST">
+                                @csrf
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1" style="color: var(--dp-text-secondary);">Nama <span style="color: var(--dp-danger);">*</span></label>
+                                        <input type="text" name="nama" required maxlength="100"
+                                            value="{{ old('nama') }}"
+                                            placeholder="Nama Anda"
+                                            class="w-full px-3 py-2 rounded-md text-sm border focus:outline-none focus:ring-2"
+                                            style="background: var(--dp-bg-page); border-color: var(--dp-border-strong); color: var(--dp-text-primary); --tw-ring-color: var(--dp-gold);">
+                                        @error('nama')
+                                        <span class="text-xs mt-1 block" style="color: var(--dp-danger);">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold mb-1" style="color: var(--dp-text-secondary);">Email <span class="opacity-50">(opsional)</span></label>
+                                        <input type="email" name="email" maxlength="150"
+                                            value="{{ old('email') }}"
+                                            placeholder="email@contoh.com"
+                                            class="w-full px-3 py-2 rounded-md text-sm border focus:outline-none focus:ring-2"
+                                            style="background: var(--dp-bg-page); border-color: var(--dp-border-strong); color: var(--dp-text-primary); --tw-ring-color: var(--dp-gold);">
+                                        @error('email')
+                                        <span class="text-xs mt-1 block" style="color: var(--dp-danger);">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="block text-xs font-semibold mb-1" style="color: var(--dp-text-secondary);">Komentar <span style="color: var(--dp-danger);">*</span></label>
+                                    <textarea name="konten" required rows="4" maxlength="2000"
+                                        placeholder="Tulis komentar Anda di sini..."
+                                        class="w-full px-3 py-2 rounded-md text-sm border focus:outline-none focus:ring-2 resize-y"
+                                        style="background: var(--dp-bg-page); border-color: var(--dp-border-strong); color: var(--dp-text-primary); --tw-ring-color: var(--dp-gold);">{{ old('konten') }}</textarea>
+                                    @error('konten')
+                                    <span class="text-xs mt-1 block" style="color: var(--dp-danger);">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <p class="text-xs" style="color: var(--dp-text-secondary); opacity: 0.6;">
+                                        Komentar akan tampil setelah disetujui moderator.
+                                    </p>
+                                    <button type="submit"
+                                        class="px-5 py-2 rounded-md text-sm font-bold transition-opacity hover:opacity-90"
+                                        style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);">
+                                        Kirim Komentar
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
-                        <!-- Share / Tags (Optional) -->
-                        <div class="mt-12 pt-8 border-t border-gray-100 dark:border-white/10">
-                            <h4 class="font-bold text-gray-900 dark:text-white mb-4">Bagikan Berita</h4>
-                            <div class="flex gap-2">
-                                <button
-                                    class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all"><span
-                                        class="font-bold">fb</span></button>
-                                <button
-                                    class="w-10 h-10 rounded-full bg-sky-50 text-sky-500 flex items-center justify-center hover:bg-sky-500 hover:text-white transition-all"><span
-                                        class="font-bold">tw</span></button>
-                                <button
-                                    class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center hover:bg-green-600 hover:text-white transition-all"><span
-                                        class="font-bold">wa</span></button>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <!-- Sidebar -->
-                <div class="lg:col-span-4 space-y-8">
-                    <!-- Recent Posts -->
-                    <div
-                        class="bg-white dark:bg-gray-800 rounded-3xl p-8 shadow-xl shadow-gray-100 dark:shadow-none border border-gray-100 dark:border-white/10 sticky top-28 transition-colors">
-                        <h3
-                            class="font-display font-bold text-xl text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                            <span class="w-1 h-6 bg-emerald-600 rounded-full"></span>
-                            Berita Terbaru
-                        </h3>
+                        {{-- Daftar komentar --}}
+                        @if($komentars->count())
                         <div class="space-y-6">
-                            @forelse($berita_lainnya as $item)
-                                <a href="{{ route('berita.show', $item->slug) }}"
-                                    class="group flex gap-4 items-start pb-6 border-b border-gray-50 dark:border-white/5 last:border-0 last:pb-0">
-                                    <div
-                                        class="w-20 h-20 rounded-xl overflow-hidden shrink-0 relative bg-gray-100 dark:bg-gray-700">
-                                        <img src="{{ $item->thumbnail ? asset('storage/' . $item->thumbnail) : 'https://placehold.co/100x100?text=No+Image' }}"
-                                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            @foreach($komentars as $komentar)
+                            <div class="rounded-lg p-4"
+                                style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                                <div class="flex gap-3">
+                                    <div class="avatar-initial shrink-0">
+                                        {{ strtoupper(substr($komentar->nama, 0, 1)) }}
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <h4
-                                            class="font-bold text-sm text-gray-800 dark:text-gray-200 line-clamp-2 leading-snug group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
-                                            {{ $item->judul }}
-                                        </h4>
-                                        <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                                            <span class="material-symbols-outlined text-[12px]">calendar_today</span>
-                                            {{ \Carbon\Carbon::parse($item->tgl_publish)->translatedFormat('d M Y') }}
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="font-semibold text-sm" style="color: var(--dp-text-primary);">{{ $komentar->nama }}</span>
+                                            <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $komentar->created_at->diffForHumans() }}</span>
+                                        </div>
+                                        <p class="text-sm leading-relaxed" style="color: var(--dp-text-primary); opacity: 0.85;">
+                                            {{ $komentar->konten }}
                                         </p>
-                                    </div>
-                                </a>
-                            @empty
-                                <p class="text-gray-400 text-sm italic">Belum ada berita lainnya.</p>
-                            @endforelse
-                        </div>
 
-                        <div class="mt-8 pt-6 border-t border-gray-100 dark:border-white/10 text-center">
-                            <a href="{{ route('berita.index') }}"
-                                class="inline-flex items-center gap-2 text-sm font-bold text-emerald-800 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-emerald-300 transition-colors">
-                                Lihat Semua Berita <span class="material-symbols-outlined">arrow_forward</span>
+                                        {{-- Reply button --}}
+                                        <button onclick="document.getElementById('reply-form-{{ $komentar->id }}').classList.toggle('hidden')"
+                                            class="mt-2 text-xs font-semibold hover:underline"
+                                            style="color: var(--dp-gold);">
+                                            <span class="material-symbols-outlined text-xs align-middle">reply</span> Balas
+                                        </button>
+
+                                        {{-- Reply form (hidden) --}}
+                                        <div id="reply-form-{{ $komentar->id }}" class="hidden mt-3 p-3 rounded-md"
+                                            style="background: var(--dp-bg-surface-2);">
+                                            <form action="{{ route('berita.komentar.store', $berita->slug) }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="parent_id" value="{{ $komentar->id }}">
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                                                    <input type="text" name="nama" required maxlength="100" placeholder="Nama Anda"
+                                                        class="w-full px-3 py-2 rounded-md text-xs border focus:outline-none focus:ring-2"
+                                                        style="background: var(--dp-bg-page); border-color: var(--dp-border-strong); color: var(--dp-text-primary); --tw-ring-color: var(--dp-gold);">
+                                                    <input type="email" name="email" maxlength="150" placeholder="Email (opsional)"
+                                                        class="w-full px-3 py-2 rounded-md text-xs border focus:outline-none focus:ring-2"
+                                                        style="background: var(--dp-bg-page); border-color: var(--dp-border-strong); color: var(--dp-text-primary); --tw-ring-color: var(--dp-gold);">
+                                                </div>
+                                                <textarea name="konten" required rows="2" maxlength="2000" placeholder="Tulis balasan..."
+                                                    class="w-full px-3 py-2 rounded-md text-xs border focus:outline-none focus:ring-2 resize-y mb-3"
+                                                    style="background: var(--dp-bg-page); border-color: var(--dp-border-strong); color: var(--dp-text-primary); --tw-ring-color: var(--dp-gold);"></textarea>
+                                                <button type="submit"
+                                                    class="px-4 py-1.5 rounded-md text-xs font-bold transition-opacity hover:opacity-90"
+                                                    style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);">
+                                                    Kirim Balasan
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        {{-- Replies --}}
+                                        @if($komentar->replies->count())
+                                        <div class="mt-4 space-y-4 pl-4"
+                                            style="border-left: 2px solid var(--dp-border);">
+                                            @foreach($komentar->replies as $reply)
+                                            <div class="flex gap-3">
+                                                <div class="avatar-initial shrink-0" style="width: 32px; height: 32px; font-size: 12px;">
+                                                    {{ strtoupper(substr($reply->nama, 0, 1)) }}
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="font-semibold text-xs" style="color: var(--dp-text-primary);">{{ $reply->nama }}</span>
+                                                        <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $reply->created_at->diffForHumans() }}</span>
+                                                    </div>
+                                                    <p class="text-xs leading-relaxed" style="color: var(--dp-text-primary); opacity: 0.85;">
+                                                        {{ $reply->konten }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @else
+                        <div class="text-center py-8 rounded-lg"
+                            style="background: var(--dp-bg-surface); border: 1px dashed var(--dp-border-strong);">
+                            <span class="material-symbols-outlined text-3xl mb-2 block" style="color: var(--dp-text-secondary);">forum</span>
+                            <p class="text-sm" style="color: var(--dp-text-secondary);">Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                        </div>
+                        @endif
+                    </section>
+
+                    {{-- ═══════════════════════════════════════
+                         REKOMENDASI BERITA (di bawah komentar)
+                    ═══════════════════════════════════════ --}}
+                    @if($rekomendasi->count())
+                    <section class="mb-8">
+                        <div class="flex items-center justify-between mb-5"
+                            style="border-top: 3px solid var(--dp-bg-primary); padding-top: 0.75rem;">
+                            <h2 class="font-display font-bold text-xl" style="color: var(--dp-text-primary);">
+                                Berita Terkait
+                            </h2>
+                            <a href="{{ route('berita.index') }}" class="text-sm font-semibold hover:underline"
+                                style="color: var(--dp-gold);">
+                                Lihat Semua &rarr;
                             </a>
                         </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @foreach($rekomendasi as $rekom)
+                            <a href="{{ route('berita.show', $rekom->slug) }}"
+                                class="group rounded-lg overflow-hidden block hover:shadow-lg transition-shadow"
+                                style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                                <div class="aspect-[16/10] overflow-hidden">
+                                    <img src="{{ $rekom->thumbnail ? asset('storage/' . $rekom->thumbnail) : 'https://placehold.co/480x300/08332c/ba9e6f?text=DASI+Pelajar' }}"
+                                        alt="{{ $rekom->judul }}"
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded"
+                                            style="background: var(--dp-bg-primary); color: var(--dp-gold);">
+                                            {{ $rekom->kategori?->nama ?? 'Berita' }}
+                                        </span>
+                                        <span class="text-xs" style="color: var(--dp-text-secondary);">
+                                            {{ $rekom->tgl_publish?->translatedFormat('d M Y') }}
+                                        </span>
+                                    </div>
+                                    <h3 class="font-display font-bold text-sm leading-tight line-clamp-2 group-hover:underline"
+                                        style="color: var(--dp-text-primary);">
+                                        {{ $rekom->judul }}
+                                    </h3>
+                                </div>
+                            </a>
+                            @endforeach
+                        </div>
+                    </section>
+                    @endif
+
+                </article>
+
+                {{-- ═══════════════════════════════════════════
+                     SIDEBAR (Right, sticky)
+                ═══════════════════════════════════════════ --}}
+                <aside class="w-full lg:w-80 shrink-0">
+                    <div class="sticky-sidebar space-y-6">
+
+                        {{-- Ad space --}}
+                        <div class="rounded-lg overflow-hidden flex items-center justify-center"
+                            style="background: var(--dp-bg-surface-2); border: 1px dashed var(--dp-border-strong); min-height: 250px;">
+                            <div class="text-center py-8 px-4">
+                                <p class="text-xs font-medium" style="color: var(--dp-text-secondary);">
+                                    <span class="material-symbols-outlined text-2xl block mb-2">ad_group</span>
+                                    Space Iklan<br>300 x 250
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Berita Terbaru --}}
+                        <div class="rounded-lg p-4" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                            <h3 class="font-display font-bold text-base mb-4 pb-2"
+                                style="color: var(--dp-text-primary); border-bottom: 2px solid var(--dp-gold);">
+                                Berita Terbaru
+                            </h3>
+                            <div class="space-y-4">
+                                @forelse($berita_lainnya as $item)
+                                <a href="{{ route('berita.show', $item->slug) }}" class="flex gap-3 group">
+                                    <div class="w-20 h-16 rounded-md overflow-hidden shrink-0">
+                                        <img src="{{ $item->thumbnail ? asset('storage/' . $item->thumbnail) : 'https://placehold.co/160x120/08332c/ba9e6f?text=DP' }}"
+                                            alt="{{ $item->judul }}"
+                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-semibold leading-tight line-clamp-2 group-hover:underline"
+                                            style="color: var(--dp-text-primary);">
+                                            {{ $item->judul }}
+                                        </h4>
+                                        <span class="text-xs mt-1 block" style="color: var(--dp-text-secondary);">
+                                            {{ $item->tgl_publish?->translatedFormat('d M Y') }}
+                                        </span>
+                                    </div>
+                                </a>
+                                @empty
+                                <p class="text-sm italic" style="color: var(--dp-text-secondary);">Belum ada berita lainnya.</p>
+                                @endforelse
+                            </div>
+
+                            <div class="mt-4 pt-3 text-center" style="border-top: 1px solid var(--dp-border);">
+                                <a href="{{ route('berita.index') }}" class="text-sm font-semibold hover:underline"
+                                    style="color: var(--dp-gold);">
+                                    Lihat Semua Berita &rarr;
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Tags --}}
+                        @if($berita->tags->count())
+                        <div class="rounded-lg p-4" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                            <h3 class="font-display font-bold text-base mb-3 pb-2"
+                                style="color: var(--dp-text-primary); border-bottom: 2px solid var(--dp-gold);">
+                                Tag Artikel Ini
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($berita->tags as $tag)
+                                <span class="inline-block px-3 py-1 rounded-full text-xs font-medium"
+                                    style="background: var(--dp-primary-tint); color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
+                                    #{{ $tag->nama }}
+                                </span>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Ad space 2 --}}
+                        <div class="rounded-lg overflow-hidden flex items-center justify-center"
+                            style="background: var(--dp-bg-surface-2); border: 1px dashed var(--dp-border-strong); min-height: 250px;">
+                            <div class="text-center py-8 px-4">
+                                <p class="text-xs font-medium" style="color: var(--dp-text-secondary);">
+                                    <span class="material-symbols-outlined text-2xl block mb-2">campaign</span>
+                                    Space Iklan<br>300 x 250
+                                </p>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
+                </aside>
+
             </div>
         </div>
     </main>

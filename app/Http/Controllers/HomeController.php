@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Berita;
 use App\Models\HeroSlider;
 use App\Models\Kader;
+use App\Models\KategoriBerita;
+use App\Models\KomentarBerita;
 use App\Models\Pengurus;
 use App\Models\PengaturanWeb;
 use App\Models\ProgramKerja;
+use App\Models\Tag;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -18,13 +21,14 @@ class HomeController extends Controller
     public function index()
     {
         $statistik = [
-            'total_kader' => Kader::count(),
-            'total_ranting' => 343,
-            'total_pac' => 26,
+            'total_kader'   => Kader::count(),
+            'total_pac'     => \App\Models\Organisasi::where('tingkat', 'PAC')->count() ?: 26,
+            'total_ranting' => \App\Models\Organisasi::where('tingkat', 'PR')->count()  ?: 343,
+            'total_pk'      => \App\Models\Organisasi::where('tingkat', 'PK')->count()  ?: 0,
         ];
 
         $sliders = HeroSlider::where('is_active', true)->orderBy('urutan', 'asc')->get();
-        $pengaturan = PengaturanWeb::first();
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
 
         // Agenda Terdekat (Limit 4, Filter out Verified LPJ, Include Today)
         $agenda_terdekat = ProgramKerja::whereDate('tgl_pelaksanaan', '>=', now()->startOfDay())
@@ -106,11 +110,11 @@ class HomeController extends Controller
         });
 
         $pengurusIpnu = $pengurusHarian->filter(function ($p) {
-            return $p->kader && $p->kader->jenis_kelamin === 'L';
+            return $p->kategori === 'IPNU';
         })->values();
 
         $pengurusIppnu = $pengurusHarian->filter(function ($p) {
-            return $p->kader && $p->kader->jenis_kelamin === 'P';
+            return $p->kategori === 'IPPNU';
         })->values();
 
         return view('welcome', compact(
@@ -126,87 +130,224 @@ class HomeController extends Controller
 
     public function showBerita($slug)
     {
-        $berita = Berita::where('slug', $slug)->where('status', 'Published')->firstOrFail();
+        $berita = Berita::where('slug', $slug)
+            ->where('status', 'Published')
+            ->with('kategori', 'tags', 'user')
+            ->firstOrFail();
         $berita->increment('views');
 
-        $berita_lainnya = Berita::where('status', 'Published')
+        // Sidebar: berita terbaru (sticky)
+        $berita_lainnya = Berita::published()
             ->where('id', '!=', $berita->id)
+            ->with('kategori')
             ->latest('tgl_publish')
             ->limit(5)
             ->get();
 
-        $pengaturan = PengaturanWeb::first();
+        // Rekomendasi: berita se-kategori (bawah komentar)
+        $rekomendasi = Berita::published()
+            ->where('id', '!=', $berita->id)
+            ->where('kategori_berita_id', $berita->kategori_berita_id)
+            ->with('kategori')
+            ->latest('tgl_publish')
+            ->limit(6)
+            ->get();
 
-        return view('berita.show', compact('berita', 'berita_lainnya', 'pengaturan'));
+        // Komentar (approved, top-level + replies)
+        $komentars = $berita->komentars()
+            ->approved()
+            ->topLevel()
+            ->with(['replies' => fn($q) => $q->approved()->oldest()])
+            ->latest()
+            ->get();
+
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
+
+        return view('berita.show', compact(
+            'berita', 'berita_lainnya', 'rekomendasi', 'komentars', 'pengaturan'
+        ));
     }
 
-    public function indexBerita()
+    public function storeKomentar(Request $request, $slug)
     {
-        $pengaturan = PengaturanWeb::first();
+        $berita = Berita::where('slug', $slug)->where('status', 'Published')->firstOrFail();
 
-        $berita_list = Berita::where('status', 'Published')
-            ->latest('tgl_publish')
-            ->paginate(9);
+        $validated = $request->validate([
+            'nama'      => 'required|string|max:100',
+            'email'     => 'nullable|email|max:150',
+            'konten'    => 'required|string|max:2000',
+            'parent_id' => 'nullable|exists:komentar_beritas,id',
+        ]);
 
-        // Reuse Hero Sliders for News Page if requested, or specific ones. 
-        // User said "hero slider yang diatur di dashboard".
+        $berita->komentars()->create($validated);
+
+        return back()->with('komentar_success', 'Komentar berhasil dikirim dan sedang menunggu moderasi.');
+    }
+
+    public function indexBerita(Request $request)
+    {
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
+
+        // Hero sliders
         $sliders = HeroSlider::where('is_active', true)->orderBy('urutan', 'asc')->get();
 
-        return view('berita.index', compact('berita_list', 'pengaturan', 'sliders'));
+        // Headline (max 5 untuk bento utama)
+        $headline = Berita::published()->headline()
+            ->with('kategori', 'tags')
+            ->latest('tgl_publish')
+            ->limit(5)
+            ->get();
+
+        // Berita per kategori (masing-masing 6 artikel) — satu query, group di PHP
+        $kategoris = KategoriBerita::withCount(['beritas' => fn($q) => $q->published()])->get();
+        $semua_berita_kategori = Berita::published()
+            ->with('kategori', 'tags')
+            ->latest('tgl_publish')
+            ->get();
+        $berita_per_kategori = [];
+        foreach ($kategoris as $kat) {
+            $berita_per_kategori[$kat->slug ?? Str::slug($kat->nama)] = $semua_berita_kategori
+                ->where('kategori_berita_id', $kat->id)
+                ->take(6)
+                ->values();
+        }
+
+        // Berita populer (sidebar, by views)
+        $berita_populer = Berita::published()
+            ->with('kategori')
+            ->orderByDesc('views')
+            ->limit(5)
+            ->get();
+
+        // Berita terbaru (sidebar)
+        $berita_terbaru = Berita::published()
+            ->with('kategori')
+            ->latest('tgl_publish')
+            ->limit(5)
+            ->get();
+
+        // Semua berita paginated (bagian bawah)
+        $semua_berita = Berita::published()
+            ->with('kategori', 'tags')
+            ->latest('tgl_publish')
+            ->paginate(12);
+
+        // Tags populer
+        $tags_populer = Tag::withCount('beritas')
+            ->orderByDesc('beritas_count')
+            ->limit(15)
+            ->get();
+
+        // Banner iklan
+        $banners = \App\Models\BannerIklan::where('is_active', true)->get()->keyBy('posisi');
+
+        return view('berita.index', compact(
+            'pengaturan', 'sliders', 'headline',
+            'kategoris', 'berita_per_kategori',
+            'berita_populer', 'berita_terbaru',
+            'semua_berita', 'tags_populer', 'banners'
+        ));
     }
 
     public function struktur(Request $request)
     {
-        $pengaturan = PengaturanWeb::first();
-        $tab = $request->get('tab', 'ipnu'); // ipnu or ippnu
-
-        $gender = ($tab === 'ippnu') ? 'P' : 'L';
-
-        // Load recursive structure
-        // Filter by Kategori (IPNU/IPPNU)
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
+        $tab = $request->get('tab', 'ipnu');
         $targetKategori = strtoupper($tab);
+        $orgName = ($tab === 'ippnu') ? 'IPPNU' : 'IPNU';
 
-        $pengurusTree = Pengurus::with('kader', 'departemenData')
+        $allPengurus = Pengurus::with('kader', 'departemenData')
             ->where('tingkatan', 'Cabang')
-            ->where('kategori', $targetKategori) // Strict filtering by Category
+            ->where('kategori', $targetKategori)
             ->where('is_active', true)
             ->orderBy('urutan_tampil', 'asc')
             ->get();
 
-        // If Tree is empty (data migration pending), fallback to flat list grouped by jabatan for demo?
-        // No, user requested "sesuai database". If empty, it's empty.
+        $childrenMap = $allPengurus->groupBy('parent_id');
+        $getChildren = fn($parentId) => $childrenMap->get($parentId) ?? collect();
 
-        // Title Logic
-        $sk = \App\Models\SuratKeputusan::latest()->first(); // Ambil SK terbaru sebagai referensi Periode?
-        // Or hardcode period if not in DB. User request: "Teks judul bagan 'Masa Khidmat 2024-2026' dibuat secara dinamis mengikuti data SK"
+        // Ketua (root node)
+        $ketua = $allPengurus->first(fn($p) => $p->jabatan === 'Ketua');
 
-        $periode = "2024-2026"; // Default
-        if ($pengurusTree->isNotEmpty()) {
-            $first = $pengurusTree->first();
-            if ($first->suratKeputusan) {
-                // Assuming nomor_surat contains year or we have tgl_mulai / tgl_selesai
-                // But migration for SK doesn't detail period fields. Checking context... add_columns...
-                // Just use static for now or infer from created_at if necessary, 
-                // but user said "Dynamic following SK". 
-                // Let's assume SK has 'periode' or I check relations.
-                // Actually, let's keep it safe. Use simple logic.
+        $sekretaris = null;
+        $bendahara = null;
+        $departemenList = collect();
+        $lembagaList = collect();
+
+        if ($ketua) {
+            $rootChildren = $getChildren($ketua->id);
+
+            // Sekretaris + Wakil Sekretaris children
+            $sekretaris = $rootChildren->first(fn($p) => $p->jabatan === 'Sekretaris');
+            if ($sekretaris) {
+                $sekretaris->wakilList = $getChildren($sekretaris->id)
+                    ->filter(fn($p) => Str::contains($p->jabatan, 'Wakil Sekretaris'))
+                    ->sortBy('urutan_tampil')
+                    ->values();
             }
+
+            // Bendahara + Wakil Bendahara children
+            $bendahara = $rootChildren->first(fn($p) => $p->jabatan === 'Bendahara');
+            if ($bendahara) {
+                $bendahara->wakilList = $getChildren($bendahara->id)
+                    ->filter(fn($p) => Str::contains($p->jabatan, 'Wakil Bendahara'))
+                    ->sortBy('urutan_tampil')
+                    ->values();
+            }
+
+            // Wakil Ketua (departemen heads) — each with Koordinator → Anggota subtree
+            $departemenList = $rootChildren
+                ->filter(fn($p) => Str::contains($p->jabatan, 'Wakil Ketua'))
+                ->sortBy('urutan_tampil')
+                ->values()
+                ->map(function ($waket) use ($getChildren) {
+                    $waketChildren = $getChildren($waket->id);
+                    $waket->koordinator = $waketChildren->first(fn($p) => $p->jabatan === 'Koordinator');
+                    if ($waket->koordinator) {
+                        $waket->koordinator->anggotaList = $getChildren($waket->koordinator->id)
+                            ->sortBy('urutan_tampil')->values();
+                    }
+                    $waket->anggotaLangsung = $waketChildren
+                        ->filter(fn($p) => $p->jabatan === 'Anggota')
+                        ->sortBy('urutan_tampil')->values();
+                    return $waket;
+                });
+
+            // Lembaga & Badan heads — filter by departemenData->jenis
+            $lembagaList = $rootChildren
+                ->filter(fn($p) => $p->departemenData &&
+                    in_array($p->departemenData->jenis, ['lembaga', 'badan']))
+                ->sortBy('urutan_tampil')
+                ->values()
+                ->map(function ($head) use ($getChildren) {
+                    $head->anggotaList = $getChildren($head->id)
+                        ->sortBy('urutan_tampil')->values();
+                    return $head;
+                });
         }
 
-        $orgName = ($tab === 'ippnu') ? 'IPPNU' : 'IPNU';
+        // Periode dari SK
+        $periode = '2024-2026';
+        $sk = \App\Models\SuratKeputusan::latest()->first();
+        if ($sk && $sk->tgl_berlaku && $sk->tgl_selesai) {
+            $periode = Carbon::parse($sk->tgl_berlaku)->format('Y') . '-' . Carbon::parse($sk->tgl_selesai)->format('Y');
+        }
 
-        return view('struktur-organisasi', compact('pengurusTree', 'pengaturan', 'tab', 'orgName', 'periode'));
+        return view('struktur-organisasi', compact(
+            'ketua', 'sekretaris', 'bendahara', 'departemenList', 'lembagaList',
+            'pengaturan', 'tab', 'orgName', 'periode'
+        ));
     }
 
     public function profil()
     {
-        $pengaturan = PengaturanWeb::first();
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
         return view('profil.index', compact('pengaturan'));
     }
 
     public function agenda()
     {
-        $pengaturan = PengaturanWeb::first();
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
         $agendas = ProgramKerja::orderBy('tgl_pelaksanaan', 'desc')->get();
         return view('agenda.index', compact('pengaturan', 'agendas'));
     }

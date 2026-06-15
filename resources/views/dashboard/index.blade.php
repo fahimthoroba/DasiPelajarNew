@@ -1,86 +1,159 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Overview')
+@section('title', 'Dashboard')
 
 @section('content')
-    <div class="mb-8 flex items-center justify-between">
-        <div>
-            <h1 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Dashboard</h1>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Selamat datang kembali, {{ Auth::user()->name }}!</p>
+    {{-- Welcome header --}}
+    <div class="mb-6">
+        <h1 class="font-display text-2xl font-bold" style="color: var(--dp-text-primary);">Dashboard</h1>
+        <p class="text-sm mt-1" style="color: var(--dp-text-secondary);">
+            Selamat datang kembali, <strong>{{ Auth::user()->name }}</strong>
+        </p>
+    </div>
+
+    {{-- Stats grid --}}
+    @if(!empty($stats))
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+            @if(isset($stats['berita']))
+                <div class="rounded-xl p-5" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-lg flex items-center justify-center"
+                             style="background: var(--dp-primary-tint); color: var(--dp-bg-primary);">
+                            <span class="material-symbols-outlined text-xl">newspaper</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--dp-text-secondary);">Total Berita</p>
+                            <h3 class="font-display text-2xl font-bold" style="color: var(--dp-text-primary);">{{ $stats['berita'] }}</h3>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($stats['surat_masuk']))
+                <div class="rounded-xl p-5" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-lg flex items-center justify-center"
+                             style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                            <span class="material-symbols-outlined text-xl">mail</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--dp-text-secondary);">Surat Masuk</p>
+                            <h3 class="font-display text-2xl font-bold" style="color: var(--dp-text-primary);">{{ $stats['surat_masuk'] }}</h3>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($stats['surat_keluar']))
+                <div class="rounded-xl p-5" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-lg flex items-center justify-center"
+                             style="background: var(--dp-primary-tint); color: var(--dp-bg-primary);">
+                            <span class="material-symbols-outlined text-xl">send</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--dp-text-secondary);">Surat Keluar</p>
+                            <h3 class="font-display text-2xl font-bold" style="color: var(--dp-text-primary);">{{ $stats['surat_keluar'] }}</h3>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(isset($stats['kader']))
+                <div class="rounded-xl p-5" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-11 h-11 rounded-lg flex items-center justify-center"
+                             style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                            <span class="material-symbols-outlined text-xl">groups</span>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-semibold uppercase tracking-wider" style="color: var(--dp-text-secondary);">Total Kader</p>
+                            <h3 class="font-display text-2xl font-bold" style="color: var(--dp-text-primary);">{{ $stats['kader'] }}</h3>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+        </div>
+    @endif
+
+    {{-- Info banner --}}
+    <div class="rounded-xl p-6 lg:p-8 relative overflow-hidden" style="background: var(--dp-bg-primary);">
+        {{-- Decorative --}}
+        <div class="absolute -top-12 -right-12 w-48 h-48 rounded-full" style="background: rgba(186,158,111,0.08);"></div>
+        <div class="absolute -bottom-8 -left-8 w-32 h-32 rounded-full" style="background: rgba(186,158,111,0.05);"></div>
+
+        <div class="relative z-10 max-w-lg">
+            <h2 class="font-display text-xl lg:text-2xl font-bold mb-3" style="color: var(--dp-text-on-primary);">
+                Mulai Kelola Organisasi
+            </h2>
+            <p class="text-sm leading-relaxed mb-4" style="color: rgba(244,244,244,0.6);">
+                Anda terdaftar sebagai
+                <span class="font-semibold px-2 py-0.5 rounded text-xs uppercase tracking-wider"
+                      style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                    {{ Auth::user()->role }}
+                </span>.
+                Gunakan menu di samping untuk mengelola data dan konten.
+            </p>
+            <a href="/" target="_blank"
+               class="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+               style="color: var(--dp-gold);">
+                <span class="material-symbols-outlined text-sm">open_in_new</span>
+                Lihat Situs Publik
+            </a>
         </div>
     </div>
 
-    <!-- Dynamic Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        @if(isset($stats['berita']))
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 flex items-center justify-center">
-                        <span class="material-symbols-outlined">newspaper</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Berita</p>
-                        <h3 class="text-2xl font-black text-gray-900 dark:text-white">{{ $stats['berita'] }}</h3>
-                    </div>
+    {{-- Quick actions --}}
+    <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        @if(in_array(Auth::user()->role, ['admin', 'pers']))
+            <a href="{{ route('dashboard.berita.index') }}"
+               class="group rounded-xl p-5 flex items-center gap-4 transition-all"
+               style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"
+               onmouseover="this.style.borderColor='var(--dp-gold)'"
+               onmouseout="this.style.borderColor='var(--dp-border)'">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                     style="background: var(--dp-primary-tint); color: var(--dp-bg-primary);">
+                    <span class="material-symbols-outlined">edit_note</span>
                 </div>
-            </div>
+                <div>
+                    <div class="text-sm font-semibold" style="color: var(--dp-text-primary);">Tulis Berita</div>
+                    <div class="text-xs" style="color: var(--dp-text-secondary);">Buat artikel baru</div>
+                </div>
+            </a>
         @endif
 
-        @if(isset($stats['surat_masuk']))
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center">
-                        <span class="material-symbols-outlined">mail</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Surat Masuk</p>
-                        <h3 class="text-2xl font-black text-gray-900 dark:text-white">{{ $stats['surat_masuk'] }}</h3>
-                    </div>
+        @if(in_array(Auth::user()->role, ['admin', 'sekretaris']))
+            <a href="{{ route('dashboard.sekretariat.surat-masuk.index') }}"
+               class="group rounded-xl p-5 flex items-center gap-4 transition-all"
+               style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"
+               onmouseover="this.style.borderColor='var(--dp-gold)'"
+               onmouseout="this.style.borderColor='var(--dp-border)'">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                     style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                    <span class="material-symbols-outlined">inbox</span>
                 </div>
-            </div>
-        @endif
-
-        @if(isset($stats['surat_keluar']))
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center">
-                        <span class="material-symbols-outlined">send</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Surat Keluar</p>
-                        <h3 class="text-2xl font-black text-gray-900 dark:text-white">{{ $stats['surat_keluar'] }}</h3>
-                    </div>
+                <div>
+                    <div class="text-sm font-semibold" style="color: var(--dp-text-primary);">Surat Masuk</div>
+                    <div class="text-xs" style="color: var(--dp-text-secondary);">Kelola surat masuk</div>
                 </div>
-            </div>
-        @endif
+            </a>
 
-        @if(isset($stats['kader']))
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 flex items-center justify-center">
-                        <span class="material-symbols-outlined">groups</span>
-                    </div>
-                    <div>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">Total Kader</p>
-                        <h3 class="text-2xl font-black text-gray-900 dark:text-white">{{ $stats['kader'] }}</h3>
-                    </div>
+            <a href="{{ route('dashboard.sekretariat.master-data.index') }}"
+               class="group rounded-xl p-5 flex items-center gap-4 transition-all"
+               style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"
+               onmouseover="this.style.borderColor='var(--dp-gold)'"
+               onmouseout="this.style.borderColor='var(--dp-border)'">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                     style="background: var(--dp-primary-tint); color: var(--dp-bg-primary);">
+                    <span class="material-symbols-outlined">database</span>
                 </div>
-            </div>
+                <div>
+                    <div class="text-sm font-semibold" style="color: var(--dp-text-primary);">Master Data</div>
+                    <div class="text-xs" style="color: var(--dp-text-secondary);">Kelola data kader & organisasi</div>
+                </div>
+            </a>
         @endif
-    </div>
-
-    <div class="bg-emerald-900 rounded-3xl p-8 relative overflow-hidden text-white shadow-xl">
-        <div class="relative z-10 max-w-xl">
-            <h2 class="text-3xl font-display font-bold mb-4">Mulai Kelola Konten</h2>
-            <p class="text-emerald-100 mb-6">Anda terdaftar sebagai <strong>{{ Auth::user()->role }}</strong>. Silakan akses
-                menu di samping untuk mengelola data.</p>
-        </div>
-        <div
-            class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2">
-        </div>
     </div>
 @endsection

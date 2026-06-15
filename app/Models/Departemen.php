@@ -17,5 +17,7 @@ class Departemen extends Model
     protected $fillable = [
         'id',
         'nama_departemen',
+        'jenis',
+        'kategori',
     ];
 }

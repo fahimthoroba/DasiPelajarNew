@@ -7,9 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Kepanitiaan extends Model
 {
-    use HasFactory;
+    use HasFactory, \App\Traits\HasCustomId;
 
-    protected $fillable = ['program_kerja_id', 'kader_id', 'nama_manual', 'jabatan'];
+    public function getPrefix(): string
+    {
+        return 'pan';
+    }
+
+    protected $fillable = ['program_kerja_id', 'kader_id', 'jabatan'];
 
     public function programKerja()
     {

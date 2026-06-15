@@ -23,10 +23,15 @@ class ProgramKerja extends Model
         'path_lpj',
         'status_lpj',
         'status_pelaksanaan',
+        'current_step',
+        'lpj_catatan',
+        'verified_by',
+        'verified_at',
     ];
 
     protected $casts = [
         'tgl_pelaksanaan' => 'date',
+        'verified_at' => 'datetime',
     ];
 
     public function departemen()
@@ -47,5 +52,68 @@ class ProgramKerja extends Model
     public function pendaftarans()
     {
         return $this->hasMany(Pendaftaran::class);
+    }
+
+    public function verifier()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function formKegiatan()
+    {
+        return $this->hasOne(\App\Models\FormKegiatan::class, 'program_kerja_id');
+    }
+
+    // --- Workflow Locking Helpers ---
+
+    public function isStep1Complete(): bool
+    {
+        return $this->kepanitiaans()->count() > 0;
+    }
+
+    public function isStep2Locked(): bool
+    {
+        return !$this->isStep1Complete();
+    }
+
+    public function canCreateNewRapatPanitia(): bool
+    {
+        // SEMUA rapat panitia harus sudah tutup DAN ada notulensi
+        $rapats = $this->absensis()->where('jenis', 'rapat_panitia')->get();
+        if ($rapats->isEmpty()) return true;
+
+        foreach ($rapats as $rapat) {
+            if ($rapat->status === 'buka' || empty($rapat->notulensi_path)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function canProceedToPelaksanaan(): bool
+    {
+        // Panitia harus sudah terbentuk
+        if (!$this->isStep1Complete()) return false;
+
+        // Semua rapat panitia (jika ada) harus sudah tutup + punya notulensi
+        $rapats = $this->absensis()->where('jenis', 'rapat_panitia')->get();
+        foreach ($rapats as $rapat) {
+            if ($rapat->status === 'buka' || empty($rapat->notulensi_path)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function isStep4Locked(): bool
+    {
+        return !$this->canProceedToPelaksanaan();
+    }
+
+    public function isStep5Locked(): bool
+    {
+        // Terkunci jika belum ada minimal sesi Pelaksanaan yang ditutup
+        $pelaksanaanSelesai = $this->absensis()->where('jenis', 'pelaksanaan')->where('status', 'tutup')->count();
+        return $pelaksanaanSelesai === 0;
     }
 }

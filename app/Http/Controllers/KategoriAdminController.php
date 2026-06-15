@@ -55,4 +55,21 @@ class KategoriAdminController extends Controller
         $kategori->delete();
         return redirect()->route('dashboard.kategori.index')->with('success', 'Kategori berhasil dihapus!');
     }
+
+    /**
+     * Quick store via AJAX (dari modal di berita form)
+     */
+    public function quickStore(Request $request)
+    {
+        $validated = $request->validate([
+            'nama' => 'required|max:255|unique:kategori_beritas,nama',
+        ]);
+        $validated['slug'] = \Illuminate\Support\Str::slug($validated['nama']);
+        $kategori = \App\Models\KategoriBerita::create($validated);
+        return response()->json([
+            'success' => true,
+            'id'      => $kategori->id,
+            'nama'    => $kategori->nama,
+        ]);
+    }
 }

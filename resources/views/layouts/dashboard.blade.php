@@ -4,273 +4,403 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Dashboard') - DasiPelajar</title>
+    <title>@yield('title', 'Dashboard') - DASI Pelajar</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}?v=3">
 
-    <!-- Fonts -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@300;400;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-    <!-- Tailwind -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        emerald: { 900: '#022C22', 800: '#064E3B', 600: '#059669', 500: '#10b981', 400: '#34D399', 50: '#ecfdf5' },
-                        amber: { 900: '#78350F', 700: '#B45309', 400: '#FBBF24', 50: '#fffbeb' },
-                        surface: { light: '#F8FAFC', card: '#FFFFFF', dark: '#0F172A' }
-                    },
-                    fontFamily: {
-                        display: ['Outfit', 'sans-serif'],
-                        body: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+
+    @include('partials.theme-init')
+
     <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-display {
+            font-family: 'Outfit', sans-serif;
+        }
+
         [x-cloak] {
             display: none !important;
         }
+
+        /* Sidebar */
+        .dash-sidebar {
+            background: var(--dp-bg-primary);
+            color: var(--dp-text-on-primary);
+        }
+
+        .dash-sidebar-link {
+            color: rgba(244, 244, 244, 0.65);
+            transition: all 0.15s ease;
+        }
+
+        .dash-sidebar-link:hover {
+            color: var(--dp-text-on-primary);
+            background: rgba(186, 158, 111, 0.1);
+        }
+
+        .dash-sidebar-link.active {
+            color: var(--dp-gold);
+            background: rgba(186, 158, 111, 0.12);
+        }
+
+        .dash-section-label {
+            color: var(--dp-gold);
+            opacity: 0.7;
+        }
+
+        /* Topbar */
+        .dash-topbar {
+            background: var(--dp-bg-surface);
+            border-bottom: 1px solid var(--dp-border);
+        }
+
+        /* Scrollbar sidebar */
+        .dash-sidebar nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .dash-sidebar nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .dash-sidebar nav::-webkit-scrollbar-thumb {
+            background: rgba(186, 158, 111, 0.2);
+            border-radius: 4px;
+        }
     </style>
-    <!-- Alpine.js for interactivity -->
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body
-    class="font-body text-slate-800 dark:text-gray-100 antialiased bg-surface-light dark:bg-[#051111] transition-colors duration-300">
+<body class="antialiased" style="background: var(--dp-bg-page); color: var(--dp-text-primary);">
 
     <div class="min-h-screen flex" x-data="{ sidebarOpen: false }">
 
-        <!-- Sidebar -->
+        {{-- ====== SIDEBAR ====== --}}
         <aside
-            class="fixed inset-y-0 left-0 z-50 w-64 bg-emerald-900 text-white shadow-xl transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-auto lg:flex lg:flex-col lg:h-screen lg:sticky lg:top-0 lg:overflow-y-auto"
+            class="dash-sidebar fixed inset-y-0 left-0 z-50 w-64 shadow-xl transition-transform duration-300 transform lg:translate-x-0 lg:static lg:inset-auto lg:flex lg:flex-col lg:h-screen lg:sticky lg:top-0"
             :class="{'translate-x-0': sidebarOpen, '-translate-x-full': !sidebarOpen}">
 
-            <!-- Logo -->
-            <div class="h-16 flex items-center justify-center border-b border-emerald-800/50">
-                <a href="{{ route('dashboard') }}"
-                    class="flex items-center gap-2 font-display font-black text-xl tracking-tight">
-                    <img src="{{ asset('favicon.png') }}" alt="Logo" class="w-6 h-6">
-                    <span>DASI<span class="text-amber-400">PELAJAR</span></span>
+            {{-- Logo --}}
+            <div class="h-16 flex items-center px-5" style="border-bottom: 1px solid rgba(186,158,111,0.15);">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style="background: var(--dp-gold);">
+                        <img src="{{ asset('favicon.png') }}" alt="Logo" class="w-5 h-5">
+                    </div>
+                    <span class="font-semibold text-lg tracking-tight" style="color: var(--dp-text-on-primary);">
+                        DASI<span style="color: var(--dp-gold);">PELAJAR</span>
+                    </span>
                 </a>
             </div>
 
-            <!-- Menu -->
-            <nav class="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
+            {{-- Navigation --}}
+            <nav class="p-3 space-y-0.5 overflow-y-auto flex-1">
 
+                {{-- === Main === --}}
                 @if(!in_array(auth()->user()->role, ['dep_organisasi', 'dep_kaderisasi']))
-                    <p class="px-4 py-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">Main</p>
-
+                    <p class="dash-section-label px-3 pt-4 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Menu Utama
+                    </p>
                     <a href="{{ route('dashboard') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">dashboard</span>
-                        <span class="font-medium">Dashboard</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard') && !request()->routeIs('dashboard.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">dashboard</span>
+                        <span>Dashboard</span>
                     </a>
                 @endif
 
                 @if(in_array(auth()->user()->role, ['admin']))
                     <a href="{{ route('dashboard.pengaturan.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.pengaturan.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">settings</span>
-                        <span class="font-medium">Pengaturan Web</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.pengaturan.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">settings</span>
+                        <span>Pengaturan Web</span>
                     </a>
                 @endif
 
-                <!-- Lembaga Pers Module -->
-                @if(in_array(auth()->user()->role, ['admin', 'pers']))
-                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Lembaga Pers</p>
-
+                {{-- === Lembaga Pers === --}}
+                @if(auth()->user()->role === 'lmb_lpp')
+                    @php
+                        $komentarPending = \App\Models\KomentarBerita::where('is_approved', false)->count();
+                    @endphp
+                    <p class="dash-section-label px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Lembaga Pers
+                    </p>
                     <a href="{{ route('dashboard.berita.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.berita.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">newspaper</span>
-                        <span class="font-medium">Berita</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.berita.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">newspaper</span>
+                        <span>Berita</span>
+                        @if($komentarPending > 0)
+                        <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#e8463a] rounded-full ml-auto">
+                            {{ $komentarPending > 99 ? '99+' : $komentarPending }}
+                        </span>
+                        @endif
                     </a>
-
                     <a href="{{ route('dashboard.kategori.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.kategori.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">category</span>
-                        <span class="font-medium">Kategori</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.kategori.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">category</span>
+                        <span>Kategori</span>
                     </a>
-
-                    <a href="{{ route('dashboard.slider.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.slider.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">view_carousel</span>
-                        <span class="font-medium">Slider Hero</span>
+                    <a href="{{ route('dashboard.media-visual.index') }}"
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.media-visual.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">perm_media</span>
+                        <span>Media Visual</span>
                     </a>
                 @endif
 
-                <!-- Sekretariat Module -->
+                {{-- === Sekretariat === --}}
                 @if(in_array(auth()->user()->role, ['admin', 'sekretaris']))
-                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Sekretariat</p>
-
+                    <p class="dash-section-label px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Sekretariat
+                    </p>
                     <a href="{{ route('dashboard.sekretariat.master-data.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.master-data.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">folder_shared</span>
-                        <span class="font-medium">Master Data</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.master-data.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">folder_shared</span>
+                        <span>Master Data</span>
                     </a>
                     <a href="{{ route('dashboard.sekretariat.organisasi.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.organisasi.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">corporate_fare</span>
-                        <span class="font-medium">Organisasi & Ranting</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.organisasi.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">corporate_fare</span>
+                        <span>Organisasi & Ranting</span>
                     </a>
-
-
-
                     <a href="{{ route('dashboard.sekretariat.absensi.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.absensi.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">qr_code_scanner</span>
-                        <span class="font-medium">Absensi & Kumpulan</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.absensi.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">qr_code_scanner</span>
+                        <span>Absensi & Kumpulan</span>
                     </a>
-
+                    <a href="{{ route('dashboard.sekretariat.proker.index') }}"
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.proker.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">event_available</span>
+                        <span>Program Kerja</span>
+                    </a>
                     <a href="{{ route('dashboard.sekretariat.surat-masuk.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.surat-masuk.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">mail</span>
-                        <span class="font-medium">Surat Masuk</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.surat-masuk.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">mail</span>
+                        <span>Surat Masuk</span>
                     </a>
-
                     <a href="{{ route('dashboard.sekretariat.surat-keluar.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.surat-keluar.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">send</span>
-                        <span class="font-medium">Surat Keluar</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.surat-keluar.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">send</span>
+                        <span>Surat Keluar</span>
                     </a>
                 @endif
 
-                <!-- Dep. Organisasi Module (PAC & Admin & Dep. Organisasi) -->
+                {{-- === Dep. Organisasi === --}}
                 @if(in_array(auth()->user()->role, ['admin', 'pac', 'dep_organisasi', 'pr', 'pk']))
-                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Organisasi</p>
-
-                    <a href="{{ route('dashboard.sekretariat.sk.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.sekretariat.sk.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">workspace_premium</span>
-                        <span class="font-medium">Surat Keputusan (SK)</span>
-                    </a>
-                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Dep. Organisasi
+                    <p class="dash-section-label px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Organisasi
                     </p>
+                    <a href="{{ route('dashboard.sekretariat.sk.index') }}"
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.sk.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">workspace_premium</span>
+                        <span>Surat Keputusan</span>
+                    </a>
 
+                    <p class="dash-section-label px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Dep. Organisasi
+                    </p>
+                    @if(in_array(auth()->user()->role, ['dep_organisasi']))
+                        <a href="{{ route('dashboard.departemen.proker.index') }}"
+                           class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.departemen.proker.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">event_note</span>
+                            <span>Pelaksanaan Program</span>
+                        </a>
+                        <a href="{{ route('dashboard.form-kegiatan.index') }}"
+                           class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.form-kegiatan.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                            <span>Form Kegiatan</span>
+                        </a>
+                    @endif
                     <a href="{{ in_array(auth()->user()->role, ['pac', 'pr', 'pk']) ? route('dashboard.pac.proker.index') : route('dashboard.admin.proker.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.pac.proker.*') || request()->routeIs('dashboard.admin.proker.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">event_available</span>
-                        <span class="font-medium">Daftar Program Kerja</span>
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.pac.proker.*') || request()->routeIs('dashboard.admin.proker.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">event_available</span>
+                        <span>Daftar Program Kerja</span>
                     </a>
 
                     @if(in_array(auth()->user()->role, ['admin', 'dep_organisasi']))
                         <a href="{{ route('dashboard.admin.analisa.index') }}"
-                            class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.admin.analisa.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                            <span class="material-symbols-outlined">analytics</span>
-                            <span class="font-medium">Analisa Data</span>
+                            class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.admin.analisa.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">analytics</span>
+                            <span>Analisa Data</span>
                         </a>
-
                         <a href="{{ route('dashboard.admin.users.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.admin.users.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">manage_accounts</span>
-                        <span class="font-medium">Manajemen Pengguna</span>
-                    </a>
+                            class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.admin.users.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">manage_accounts</span>
+                            <span>Manajemen Pengguna</span>
+                        </a>
                     @endif
                 @endif
 
-                <!-- Dep. Kaderisasi Module -->
+                {{-- === Dep. Kaderisasi === --}}
                 @if(in_array(auth()->user()->role, ['admin', 'pac', 'dep_kaderisasi', 'pr', 'pk']))
-                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">Dep. Kaderisasi</p>
-                    <a href="{{ route('dashboard.kaderisasi.form.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.kaderisasi.form.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">how_to_reg</span>
-                        <span class="font-medium">Form Pendaftaran</span>
-                    </a>
-                @endif
-
-                <!-- Departemen Module -->
-                @if(auth()->user()->role == 'departemen')
-                    <p class="px-4 py-2 mt-6 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                        {{ auth()->user()->name }}
+                    <p class="dash-section-label px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Dep. Kaderisasi
                     </p>
-
-                    <a href="{{ route('dashboard.departemen.proker.index') }}"
-                        class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-800/50 text-emerald-100 hover:text-white transition-colors {{ request()->routeIs('dashboard.departemen.proker.*') ? 'bg-emerald-800 text-white shadow-lg shadow-emerald-900/20' : '' }}">
-                        <span class="material-symbols-outlined">event_note</span>
-                        <span class="font-medium">Program Kerja</span>
+                    @if(in_array(auth()->user()->role, ['dep_kaderisasi']))
+                        <a href="{{ route('dashboard.departemen.proker.index') }}"
+                           class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.departemen.proker.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">event_note</span>
+                            <span>Pelaksanaan Program</span>
+                        </a>
+                        <a href="{{ route('dashboard.form-kegiatan.index') }}"
+                            class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.form-kegiatan.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                            <span>Form Kegiatan</span>
+                        </a>
+                    @endif
+                    <a href="{{ route('dashboard.kaderisasi.absensi.index') }}"
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.kaderisasi.absensi.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">fact_check</span>
+                        <span>Absensi Khusus</span>
                     </a>
                 @endif
 
-                <!-- Logout (Mobile Only) -->
-                <div class="lg:hidden mt-8 pt-8 border-t border-emerald-800">
+                {{-- === Ruang Kerja Departemen / Lembaga / Badan === --}}
+                @if(auth()->user()->role == 'departemen' || (str_starts_with(auth()->user()->role, 'dep_') && !in_array(auth()->user()->role, ['dep_organisasi', 'dep_kaderisasi'])) || str_starts_with(auth()->user()->role, 'lmb_') || str_starts_with(auth()->user()->role, 'bdn_'))
+                    <p class="dash-section-label px-3 pt-5 pb-2 text-[10px] font-semibold uppercase tracking-widest">
+                        Ruang Kerja Anda
+                    </p>
+                    <a href="{{ route('dashboard.departemen.proker.index') }}"
+                       class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.departemen.proker.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">event_note</span>
+                        <span>Pelaksanaan Program</span>
+                    </a>
+                    <a href="{{ route('dashboard.form-kegiatan.index') }}"
+                       class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.form-kegiatan.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                        <span>Form Kegiatan</span>
+                    </a>
+                @endif
+
+                {{-- Form Kegiatan untuk admin & sekretaris --}}
+                @if(in_array(auth()->user()->role, ['admin', 'sekretaris']))
+                    <a href="{{ route('dashboard.form-kegiatan.index') }}"
+                       class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.form-kegiatan.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                        <span>Form Kegiatan</span>
+                    </a>
+                @endif
+
+                {{-- Logout (Mobile) --}}
+                <div class="lg:hidden mt-6 pt-6" style="border-top: 1px solid rgba(186,158,111,0.15);">
                     <form action="{{ route('logout') }}" method="POST">
                         @csrf
                         <button type="submit"
-                            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-900/50 text-red-300 hover:text-white transition-colors">
-                            <span class="material-symbols-outlined">logout</span>
-                            <span class="font-medium">Logout</span>
+                            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors"
+                            style="color: var(--dp-danger);">
+                            <span class="material-symbols-outlined text-xl">logout</span>
+                            <span>Logout</span>
                         </button>
                     </form>
                 </div>
 
             </nav>
+
+            {{-- Sidebar footer --}}
+            <div class="hidden lg:flex items-center gap-3 px-5 py-4"
+                style="border-top: 1px solid rgba(186,158,111,0.15);">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                    style="background: var(--dp-gold); color: var(--dp-bg-primary);">
+                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-semibold truncate" style="color: var(--dp-text-on-primary);">
+                        {{ Auth::user()->name }}
+                    </div>
+                    <div class="text-[10px] uppercase tracking-wider" style="color: var(--dp-gold); opacity: 0.7;">
+                        {{ Auth::user()->role ?? 'User' }}
+                    </div>
+                </div>
+            </div>
         </aside>
 
-        <!-- Overlay -->
+        {{-- Overlay mobile --}}
         <div class="fixed inset-0 z-40 bg-black/50 lg:hidden" x-show="sidebarOpen" x-transition.opacity
             @click="sidebarOpen = false"></div>
 
-        <!-- Main Content -->
+        {{-- ====== MAIN CONTENT ====== --}}
         <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
 
-            <!-- Topbar -->
-            <header
-                class="h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-white/5 flex items-center justify-between px-4 lg:px-6 shadow-sm z-30">
-                <!-- Hamburger -->
-                <button @click="sidebarOpen = !sidebarOpen"
-                    class="lg:hidden text-gray-500 hover:text-emerald-600 focus:outline-none">
-                    <span class="material-symbols-outlined text-3xl">menu</span>
-                </button>
+            {{-- Topbar --}}
+            <header class="dash-topbar h-14 flex items-center justify-between px-4 lg:px-6 z-30 sticky top-0"
+                style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
 
-                <!-- Search/Title (Placeholder) -->
-                <div class="hidden lg:block text-sm font-medium text-gray-500">
-                    @yield('title')
+                {{-- Left: hamburger + breadcrumb --}}
+                <div class="flex items-center gap-3">
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-1.5 rounded-lg transition-colors"
+                        style="color: var(--dp-text-secondary);">
+                        <span class="material-symbols-outlined text-2xl">menu</span>
+                    </button>
+                    <span class="hidden lg:block text-sm font-semibold" style="color: var(--dp-text-secondary);">
+                        @yield('title')
+                    </span>
                 </div>
 
-                <!-- Right Actions -->
-                <div class="flex items-center gap-4">
-                    <!-- Dark Mode Toggle (Simple JS Implementation or placeholder) -->
-                    <button onclick="document.documentElement.classList.toggle('dark')"
-                        class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 dark:text-gray-400">
-                        <span class="material-symbols-outlined">dark_mode</span>
+                {{-- Right: actions --}}
+                <div class="flex items-center gap-2">
+                    {{-- Visit site --}}
+                    <a href="/" target="_blank"
+                        class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                        style="color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
+                        <span class="material-symbols-outlined text-sm">open_in_new</span>
+                        Lihat Situs
+                    </a>
+
+                    {{-- Theme toggle --}}
+                    <button
+                        onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');"
+                        class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+                        style="color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
+                        <span class="material-symbols-outlined text-lg">dark_mode</span>
                     </button>
 
-                    <!-- Profile Dropdown -->
+                    {{-- Profile dropdown --}}
                     <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open" class="flex items-center gap-3 focus:outline-none">
+                        <button @click="open = !open" class="flex items-center gap-2.5 pl-3 focus:outline-none">
                             <div class="text-right hidden sm:block">
-                                <div class="text-sm font-bold text-gray-900 dark:text-white leading-none">
+                                <div class="text-sm font-semibold leading-none" style="color: var(--dp-text-primary);">
                                     {{ Auth::user()->name }}
                                 </div>
-                                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                <div class="text-[10px] uppercase tracking-wider mt-0.5" style="color: var(--dp-gold);">
                                     {{ Auth::user()->role ?? 'User' }}
                                 </div>
                             </div>
-                            <div
-                                class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg">
-                                {{ substr(Auth::user()->name, 0, 1) }}
+                            <div class="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold"
+                                style="background: var(--dp-bg-primary); color: var(--dp-gold);">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
                         </button>
 
-                        <!-- Dropdown Menu -->
                         <div x-show="open" @click.away="open = false"
-                            class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 py-1"
+                            class="absolute right-0 mt-2 w-52 rounded-xl shadow-xl py-1 z-50"
+                            style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"
                             x-transition.origin.top.right x-cloak>
-                            <a href="#"
-                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Profil
-                                Saya</a>
-                            <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                            <div class="px-4 py-3" style="border-bottom: 1px solid var(--dp-border);">
+                                <div class="text-sm font-semibold" style="color: var(--dp-text-primary);">
+                                    {{ Auth::user()->name }}
+                                </div>
+                                <div class="text-xs mt-0.5" style="color: var(--dp-text-secondary);">
+                                    {{ Auth::user()->email }}
+                                </div>
+                            </div>
+                            <a href="#" class="block px-4 py-2.5 text-sm transition-colors"
+                                style="color: var(--dp-text-secondary);"
+                                onmouseover="this.style.background='var(--dp-primary-tint)'"
+                                onmouseout="this.style.background='transparent'">
+                                Profil Saya
+                            </a>
+                            <div style="border-top: 1px solid var(--dp-border);"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button type="submit"
-                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20">
+                                <button type="submit" class="w-full text-left px-4 py-2.5 text-sm transition-colors"
+                                    style="color: var(--dp-danger);"
+                                    onmouseover="this.style.background='var(--dp-danger-tint)'"
+                                    onmouseout="this.style.background='transparent'">
                                     Logout
                                 </button>
                             </form>
@@ -279,8 +409,8 @@
                 </div>
             </header>
 
-            <!-- Content Body -->
-            <main class="flex-1 overflow-x-hidden overflow-y-auto bg-surface-light dark:bg-[#051111] p-4 lg:p-8" data-aos="fade-in">
+            {{-- Page content --}}
+            <main class="flex-1 overflow-x-hidden overflow-y-auto p-4 lg:p-6">
                 @yield('content')
             </main>
 
@@ -288,6 +418,7 @@
 
     </div>
 
+@stack('scripts')
 </body>
 
 </html>

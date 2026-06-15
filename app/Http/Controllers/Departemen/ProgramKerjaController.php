@@ -27,8 +27,7 @@ class ProgramKerjaController extends Controller
 
     public function show($id)
     {
-        $proker = ProgramKerja::with(['departemen', 'kepanitiaans', 'absensis'])->findOrFail($id);
-        // Authorization check if needed (e.g. only proker's department)
+        $proker = ProgramKerja::with(['departemen', 'kepanitiaans', 'absensis', 'formKegiatan'])->findOrFail($id);
         return view('dashboard.departemen.proker.show', compact('proker'));
     }
 
@@ -49,29 +48,91 @@ class ProgramKerjaController extends Controller
         return back()->with('success', 'Status program berhasil diperbarui.');
     }
     // --- Committee (Panitia) ---
+    // Daftar sie tetap
+    private array $sieList = [
+        'acara'          => 'Sie Acara',
+        'konsumsi'       => 'Sie Konsumsi',
+        'dokumentasi'    => 'Sie Dokumentasi',
+        'perkap'         => 'Sie Perkap',
+        'humas'          => 'Sie Humas',
+        'sekretariatan'  => 'Sie Sekretariatan',
+        'keamanan'       => 'Sie Keamanan',
+        'kesehatan'      => 'Sie Kesehatan',
+    ];
+
     public function indexPanitia($id)
     {
         $proker = ProgramKerja::with('kepanitiaans.kader')->findOrFail($id);
-        $kaders = \App\Models\Kader::all();
-        return view('dashboard.departemen.proker.panitia', compact('proker', 'kaders'));
+        $kaders = \App\Models\Kader::orderBy('nama_lengkap')->get();
+
+        // Kelompokkan panitia yang sudah ada untuk pre-fill form
+        $existing       = $proker->kepanitiaans->keyBy('jabatan');
+        $existingAnggota = $proker->kepanitiaans->groupBy('jabatan');
+        $sieList        = $this->sieList;
+
+        return view('dashboard.departemen.proker.panitia',
+            compact('proker', 'kaders', 'existing', 'existingAnggota', 'sieList'));
     }
 
-    public function storePanitia(Request $request, $id)
+    public function bulkStorePanitia(Request $request, $id)
     {
-        $request->validate([
-            'jabatan' => 'required|string',
-            'kader_id' => 'nullable|exists:kaders,id',
-            'nama_manual' => 'nullable|string|required_without:kader_id',
-        ]);
+        $proker = ProgramKerja::findOrFail($id);
 
-        \App\Models\Kepanitiaan::create([
-            'program_kerja_id' => $id,
-            'kader_id' => $request->kader_id,
-            'nama_manual' => $request->nama_manual,
-            'jabatan' => $request->jabatan,
-        ]);
+        // Hapus semua panitia lama, lalu re-insert
+        $proker->kepanitiaans()->delete();
 
-        return back()->with('success', 'Panitia berhasil ditambahkan.');
+        $inserted = 0;
+
+        // BPH: Ketua, Sekretaris, Bendahara
+        $bphMap = [
+            'ketua'      => 'Ketua Panitia',
+            'sekretaris' => 'Sekretaris',
+            'bendahara'  => 'Bendahara',
+        ];
+        foreach ($bphMap as $key => $jabatan) {
+            $kaderId = $request->input("bph.$key");
+            if ($kaderId) {
+                \App\Models\Kepanitiaan::create([
+                    'program_kerja_id' => $id,
+                    'kader_id'         => $kaderId,
+                    'jabatan'          => $jabatan,
+                ]);
+                $inserted++;
+            }
+        }
+
+        // Sie sections: CO + dynamic anggota
+        foreach ($this->sieList as $slug => $label) {
+            $coId = $request->input("sie.$slug.co");
+            if ($coId) {
+                \App\Models\Kepanitiaan::create([
+                    'program_kerja_id' => $id,
+                    'kader_id'         => $coId,
+                    'jabatan'          => "CO $label",
+                ]);
+                $inserted++;
+            }
+            foreach ($request->input("sie.$slug.anggota", []) as $anggotaId) {
+                if ($anggotaId) {
+                    \App\Models\Kepanitiaan::create([
+                        'program_kerja_id' => $id,
+                        'kader_id'         => $anggotaId,
+                        'jabatan'          => "Anggota $label",
+                    ]);
+                    $inserted++;
+                }
+            }
+        }
+
+        // Advance step jika baru selesai step 1
+        if ($inserted > 0 && $proker->current_step == 1) {
+            $proker->update(['current_step' => 2, 'status_pelaksanaan' => 'Persiapan']);
+        } elseif ($inserted === 0 && $proker->current_step == 2) {
+            $proker->update(['current_step' => 1, 'status_pelaksanaan' => 'Perencanaan']);
+        }
+
+        return redirect()->route('dashboard.departemen.proker.panitia', $id)
+            ->with('success', 'Susunan panitia berhasil disimpan.');
     }
 
     public function destroyPanitia($id, $panitiaId)
@@ -84,35 +145,76 @@ class ProgramKerjaController extends Controller
     public function indexAgenda($id)
     {
         $proker = ProgramKerja::with('absensis')->findOrFail($id);
-        return view('dashboard.departemen.proker.agenda', compact('proker'));
+
+        $qrSvgs = [];
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputType' => \chillerlan\QRCode\QRCode::OUTPUT_MARKUP_SVG,
+            'imageBase64' => false,
+        ]);
+        foreach ($proker->absensis as $absensi) {
+            $scanUrl = route('absensi.scan', $absensi->kode_akses);
+            $qrSvgs[$absensi->id] = (new \chillerlan\QRCode\QRCode($options))->render($scanUrl);
+        }
+
+        return view('dashboard.departemen.proker.agenda', compact('proker', 'qrSvgs'));
     }
 
     public function storeAgenda(Request $request, $id)
     {
         $request->validate([
-            'judul' => 'required|string',
+            'judul'     => 'required|string',
             'tgl_waktu' => 'required|date',
-            'jenis' => 'required|in:rapat,kegiatan',
-            'notulensi_path' => 'nullable|file|mimes:pdf,doc,docx|max:3072',
+            'jenis'     => 'required|in:rapat_panitia,pelaksanaan',
         ]);
 
-        $path = null;
-        if ($request->hasFile('notulensi_path')) {
-            $path = $request->file('notulensi_path')->store('notulensi', 'public');
+        $proker = ProgramKerja::findOrFail($id);
+
+        if ($request->jenis === 'rapat_panitia' && !$proker->canCreateNewRapatPanitia()) {
+            return back()->with('error', 'Akses ditolak: Semua rapat sebelumnya harus sudah ditutup dan memiliki file notulensi.');
+        }
+
+        if ($request->jenis === 'pelaksanaan') {
+            if (!$proker->canProceedToPelaksanaan()) {
+                return back()->with('error', 'Akses ditolak: Pastikan kepanitiaan sudah dibentuk dan semua rapat panitia sudah selesai beserta notulensinya.');
+            }
+            if ($proker->current_step < 4) {
+                $proker->update(['current_step' => 4, 'status_pelaksanaan' => 'Pelaksanaan']);
+            }
         }
 
         \App\Models\Absensi::create([
             'program_kerja_id' => $id,
-            'judul' => $request->judul,
-            'jenis' => $request->jenis,
-            'tgl_waktu' => $request->tgl_waktu,
-            'notulensi_path' => $path,
-            'created_by' => auth()->user()->id, // String ID
-            'status' => 'buka',
-            'kode_akses' => \Illuminate\Support\Str::random(6),
+            'departemen_id'    => $proker->departemen_id,
+            'judul'            => $request->judul,
+            'jenis'            => $request->jenis,
+            'tgl_waktu'        => $request->tgl_waktu,
+            'notulensi_path'   => null,
+            'created_by'       => auth()->user()->id,
+            'status'           => 'buka',
+            'kode_akses'       => \Illuminate\Support\Str::random(6),
         ]);
 
         return back()->with('success', 'Agenda berhasil ditambahkan.');
+    }
+
+    public function closeAgenda($id, $agendaId)
+    {
+        $absensi = \App\Models\Absensi::findOrFail($agendaId);
+        $absensi->close();
+        return back()->with('success', 'Sesi absensi ditutup.');
+    }
+
+    public function uploadNotulensi(Request $request, $id, $agendaId)
+    {
+        $request->validate([
+            'notulensi' => 'required|file|mimes:pdf,doc,docx|max:3072',
+        ]);
+
+        $absensi = \App\Models\Absensi::findOrFail($agendaId);
+        $path = $request->file('notulensi')->store('notulensi', 'public');
+        $absensi->update(['notulensi_path' => $path]);
+
+        return back()->with('success', 'Notulensi berhasil diupload.');
     }
 
     public function destroyAgenda($id, $agendaId)
@@ -126,34 +228,21 @@ class ProgramKerjaController extends Controller
     public function updateLpj(Request $request, $id)
     {
         $proker = ProgramKerja::findOrFail($id);
+
+        if ($proker->isStep5Locked()) {
+            return back()->with('error', 'Akses ditolak: Belum ada Sesi Pelaksanaan Kegiatan yang ditutup/selesai.');
+        }
+
         $request->validate(['lpj_path' => 'required|file|mimes:pdf|max:5120']);
 
         $path = $request->file('lpj_path')->store('lpj', 'public');
 
-        $proker->update(['lpj_path' => $path]);
-        return back()->with('success', 'LPJ berhasil diupload.');
+        $proker->update([
+            'path_lpj' => $path,
+            'current_step' => 6 // Menunggu Verifikasi
+        ]);
+
+        return back()->with('success', 'LPJ berhasil diupload. Menunggu verifikasi dari BPH.');
     }
 
-    // --- Registration Setup ---
-    public function indexPendaftaran($id)
-    {
-        $proker = ProgramKerja::findOrFail($id);
-        return view('dashboard.departemen.proker.pendaftaran', compact('proker'));
-    }
-
-    public function updatePendaftaran(Request $request, $id)
-    {
-        $proker = ProgramKerja::findOrFail($id);
-
-        $data = [
-            'is_public_registration' => $request->has('is_public_registration'),
-        ];
-
-        if ($data['is_public_registration'] && !$proker->registration_link_token) {
-            $data['registration_link_token'] = \Illuminate\Support\Str::random(32);
-        }
-
-        $proker->update($data);
-        return back()->with('success', 'Pengaturan pendaftaran diperbarui.');
-    }
 }

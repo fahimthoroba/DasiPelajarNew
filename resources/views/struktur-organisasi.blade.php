@@ -4,519 +4,546 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Struktur Organisasi - PC {{ $orgName }} Kediri</title>
+    <title>Struktur Organisasi - PC {{ $orgName }} Kab. Kediri</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-
-    <!-- Tailwind -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        emerald: { 900: '#022C22', 800: '#064E3B', 600: '#059669', 500: '#10b981', 400: '#34D399', 50: '#ecfdf5' },
-                        amber: { 900: '#78350F', 700: '#B45309', 400: '#FBBF24', 50: '#fffbeb' },
-                        surface: { light: '#F8FAFC', card: '#FFFFFF', dark: '#0F172A' }
-                    },
-                    fontFamily: {
-                        display: ['Outfit', 'sans-serif'],
-                        body: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
+    @php
+        $isIppnu = ($tab === 'ippnu');
+
+        // Helper: generate local SVG initials avatar
+        function orgAvatar($name, $bg = '#08332c', $color = '#ba9e6f') {
+            $initials = collect(explode(' ', $name))->take(2)->map(fn($w) => mb_strtoupper(mb_substr($w, 0, 1)))->join('');
+            return "data:image/svg+xml," . rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" rx="60" fill="'.$bg.'"/><text x="50%" y="54%" dominant-baseline="central" text-anchor="middle" font-size="44" font-weight="700" font-family="sans-serif" fill="'.$color.'">'.$initials.'</text></svg>');
         }
-    </script>
-            <style>
-                /* --- FIXED HIERARCHICAL CSS --- */
-                .org-tree ul {
-                    padding-top: 20px;
-                    position: relative;
-                    transition: all 0.5s;
-                    display: flex;
-                    justify-content: center;
-                }
 
-                .org-tree li {
-                    float: left;
-                    text-align: center;
-                    list-style-type: none;
-                    position: relative;
-                    padding: 20px 10px 0 10px;
-                    transition: all 0.5s;
-                }
+        function personImg($person, $bg = '#08332c', $color = '#ba9e6f') {
+            return $person->kader->foto_path
+                ? asset('storage/' . $person->kader->foto_path)
+                : orgAvatar($person->kader->nama_lengkap, $bg, $color);
+        }
 
-                /* Connectors */
-                .org-tree li::before,
-                .org-tree li::after {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    right: 50%;
-                    border-top: 2px solid #cbd5e1;
-                    width: 50%;
-                    height: 20px;
-                }
+        function personData($person) {
+            return json_encode([
+                'name'  => $person->kader->nama_lengkap,
+                'role'  => $person->jabatan_lengkap ?? $person->jabatan,
+                'dept'  => $person->departemenData->nama_departemen ?? '',
+                'image' => personImg($person),
+                'quote' => $person->kader->quote ?? '',
+            ]);
+        }
+    @endphp
 
-                .org-tree li::after {
-                    right: auto;
-                    left: 50%;
-                    border-left: 2px solid #cbd5e1;
-                }
+    <style>
+        /* ========== ORG CHART CONNECTOR LINES ========== */
+        .connector-v { width: 2px; background: var(--dp-border-strong); margin: 0 auto; }
+        .connector-h { height: 2px; background: var(--dp-border-strong); }
+        .dark .connector-v, .dark .connector-h { background: var(--dp-border); }
 
-                .org-tree li:only-child::after,
-                .org-tree li:only-child::before {
-                    display: none;
-                }
-                
-                .org-tree li:only-child { 
-                    padding-top: 0;
-                }
+        /* Card */
+        .org-card {
+            background: var(--dp-bg-surface);
+            border: 1px solid var(--dp-border);
+            border-radius: 10px;
+            padding: 10px 8px 8px;
+            width: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+            position: relative;
+            z-index: 10;
+        }
+        .org-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--dp-gold);
+            box-shadow: 0 8px 20px -4px rgba(8,51,44,0.12);
+        }
+        .org-card-sm { width: 126px; padding: 8px 6px 6px; }
+        .org-card-xs { width: 118px; padding: 6px 4px 4px; border-style: dashed; }
 
-                .org-tree li:first-child::before,
-                .org-tree li:last-child::after {
-                    border: 0 none;
-                }
+        .org-photo {
+            width: 56px; height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--dp-gold-tint);
+            margin-bottom: 6px;
+        }
+        .org-photo-lg { width: 68px; height: 68px; border-color: var(--dp-gold); }
 
-                .org-tree li:last-child::before {
-                    border-right: 2px solid #cbd5e1;
-                    border-radius: 0 5px 0 0;
-                }
+        .org-name {
+            font-size: 0.7rem; font-weight: 700; line-height: 1.15;
+            color: var(--dp-text-primary); text-align: center;
+            margin-bottom: 2px;
+        }
+        .org-role {
+            font-size: 0.6rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.04em;
+            color: var(--dp-gold); text-align: center;
+        }
+        .org-dept {
+            font-size: 0.55rem; font-weight: 500;
+            color: var(--dp-text-secondary); text-align: center;
+            margin-top: 1px;
+        }
 
-                .org-tree li:first-child::after {
-                    border-radius: 5px 0 0 0;
-                }
+        /* Lembaga card accent */
+        .org-card-lembaga {
+            background: var(--dp-gold-tint);
+            border-color: var(--dp-border-gold);
+        }
 
-                /* Downward line from parent */
-                .org-tree ul ul::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 50%;
-                    border-left: 2px solid #cbd5e1;
-                    width: 0;
-                    height: 20px;
-                }
+        /* Section label */
+        .section-label {
+            display: inline-block;
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em;
+            color: var(--dp-text-secondary);
+            padding: 4px 14px;
+            border: 1px solid var(--dp-border);
+            border-radius: 999px;
+            background: var(--dp-bg-surface);
+        }
 
-                /* Vertical Stack (For Deputies) */
-                .deputy-stack {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    position: relative;
-                    margin-top: 20px;
-                }
-                
-                .deputy-stack::before {
-                    content: '';
-                    position: absolute;
-                    top: -20px;
-                    left: 50%;
-                    width: 0;
-                    height: 20px;
-                    border-left: 2px solid #cbd5e1;
-                }
+        /* Row layout for sm/xs cards (avatar left of name) */
+        .org-card-row {
+            flex-direction: row;
+            align-items: center;
+            gap: 6px;
+            width: auto;
+            min-width: 110px;
+            max-width: 158px;
+            padding: 5px 8px;
+        }
+        .org-photo-mini {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid var(--dp-gold-tint);
+            flex-shrink: 0;
+        }
+        .org-photo-mini-xs {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid var(--dp-border);
+            flex-shrink: 0;
+        }
+        .org-card-row .org-name,
+        .org-card-row .org-role,
+        .org-card-row .org-dept {
+            text-align: left;
+            margin-bottom: 0;
+        }
 
-                .deputy-item {
-                    position: relative;
-                    padding-top: 10px;
-                }
-                
-                .deputy-item::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    left: 50%;
-                    width: 0;
-                    height: 10px;
-                    border-left: 2px solid #cbd5e1; /* Connect to item above */
-                }
+        /* Mobile accordion */
+        @media (max-width: 1023px) {
+            .desktop-chart { display: none; }
+            .mobile-chart { display: block; }
+        }
+        @media (min-width: 1024px) {
+            .desktop-chart { display: block; }
+            .mobile-chart { display: none; }
+        }
+    </style>
+</head>
 
-                /* Card Styles */
-                .org-card {
-                    background: white;
-                    border: 1px solid #e2e8f0;
-                    border-radius: 12px;
-                    padding: 8px;
-                    width: 140px;
-                    margin: 0 auto;
-                    position: relative;
-                    z-index: 10;
-                    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    transition: transform 0.2s;
-                    cursor: pointer;
-                }
+<body class="min-h-screen" style="background: var(--dp-bg-page);" x-data="{ modalOpen: false, activePerson: {} }">
+    @include('partials.navbar')
 
-                .org-card:hover {
-                    transform: translateY(-5px);
-                    border-color: #10b981;
-                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-                }
-
-                :is(.dark .org-card) {
-                    background-color: #1f2937;
-                    border-color: rgba(255, 255, 255, 0.1);
-                }
-
-                .org-photo {
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                    border: 2px solid #ecfdf5;
-                    margin-bottom: 4px;
-                }
-
-                :is(.dark .org-photo) {
-                    border-color: rgba(255, 255, 255, 0.1);
-                }
-
-                .org-name {
-                    font-size: 0.75rem;
-                    font-weight: 700;
-                    line-height: 1.1;
-                    margin-bottom: 2px;
-                    color: #0f172a;
-                    text-align: center;
-                }
-
-                :is(.dark .org-name) {
-                    color: #f1f5f9;
-                }
-
-                .org-role {
-                    font-size: 0.65rem;
-                    text-transform: uppercase;
-                    font-weight: 600;
-                    color: #059669;
-                    text-align: center;
-                }
-
-                /* Dark Mode Connectors */
-                :is(.dark .org-tree li::before),
-                :is(.dark .org-tree li::after),
-                :is(.dark .org-tree ul ul::before),
-                :is(.dark .org-tree li:last-child::before),
-                :is(.dark .org-tree li:first-child::after),
-                :is(.dark .deputy-stack::before),
-                :is(.dark .deputy-item::before) {
-                    border-color: rgba(255, 255, 255, 0.2);
-                }
-            </style>
-
-    <main class="bg-slate-50 dark:bg-[#020617] min-h-screen">
-        <!-- Navigation / Header -->
-        <nav class="fixed w-full z-50 transition-all duration-300 bg-white/80 dark:bg-[#020617]/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex items-center justify-between h-20">
-                    <a href="{{ route('home') }}" class="flex items-center gap-2 group">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform">
-                            D
-                        </div>
-                        <span class="font-display font-bold text-xl text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                            Dasi<span class="text-emerald-600 dark:text-emerald-500">Pelajar</span>
-                        </span>
-                    </a>
-                    <a href="{{ route('home') }}" class="text-sm font-medium text-gray-500 hover:text-emerald-600 dark:text-gray-400 dark:hover:text-emerald-500 transition-colors">
-                        Kembali ke Beranda
-                    </a>
-                </div>
-            </div>
-        </nav>
-
-        <div class="pt-32 pb-12 px-4 max-w-7xl mx-auto text-center">
-            <h1 class="font-display font-black text-4xl md:text-5xl text-gray-900 dark:text-white mb-4">
-                Struktur Organisasi <span class="{{ $tab === 'ippnu' ? 'text-amber-500' : 'text-emerald-600' }}">{{ $orgName }}</span>
+    <main class="pt-28 pb-16">
+        {{-- ===== HEADER ===== --}}
+        <div class="max-w-7xl mx-auto px-4 text-center mb-10">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] mb-3" style="color: var(--dp-gold);">Struktur Organisasi</p>
+            <h1 class="font-display font-black text-3xl md:text-5xl mb-3" style="color: var(--dp-text-primary);">
+                PC <span style="color: {{ $isIppnu ? 'var(--dp-gold)' : 'var(--dp-bg-primary)' }};">{{ $orgName }}</span>
             </h1>
-            <p class="text-gray-500 dark:text-gray-400 text-lg mb-8">Masa Khidmat {{ $periode }}</p>
+            <p class="text-base mb-6" style="color: var(--dp-text-secondary);">Masa Khidmat {{ $periode }} &mdash; Kabupaten Kediri</p>
 
-            <!-- TABS -->
-            <div class="inline-flex bg-white dark:bg-slate-800 p-1 rounded-full shadow-lg border border-gray-100 dark:border-white/5 mb-8">
-                <a href="?tab=ipnu" 
-                   class="px-8 py-2 rounded-full text-sm font-bold transition-all {{ $tab === 'ipnu' ? 'bg-emerald-600 text-white shadow-md' : 'text-gray-500 hover:text-emerald-600 dark:text-gray-400' }}">
+            {{-- TABS --}}
+            <div class="inline-flex p-1 rounded-full shadow-md" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                <a href="?tab=ipnu"
+                   class="px-8 py-2 rounded-full text-sm font-bold transition-all"
+                   style="{{ $tab === 'ipnu' ? 'background: var(--dp-bg-primary); color: var(--dp-text-on-primary); box-shadow: 0 0 0 1.5px var(--dp-gold);' : 'color: var(--dp-text-secondary);' }}">
                    PC IPNU
                 </a>
-                <a href="?tab=ippnu" 
-                   class="px-8 py-2 rounded-full text-sm font-bold transition-all {{ $tab === 'ippnu' ? 'bg-amber-500 text-white shadow-md' : 'text-gray-500 hover:text-amber-500 dark:text-gray-400' }}">
+                <a href="?tab=ippnu"
+                   class="px-8 py-2 rounded-full text-sm font-bold transition-all"
+                   style="{{ $tab === 'ippnu' ? 'background: var(--dp-gold); color: #08332c;' : 'color: var(--dp-text-secondary);' }}">
                    PC IPPNU
                 </a>
             </div>
         </div>
 
-        <div class="w-full overflow-x-auto pb-12">
-            <div class="min-w-[1024px] mx-auto px-4 pt-8 org-tree">
-                @php
-                    // --- THEME SETUP ---
-                    $isIppnu = ($tab === 'ippnu');
-                    $theme = $isIppnu ? 'amber' : 'emerald';
-                    $themeColor = $isIppnu ? '#f59e0b' : '#10b981';
-                    $themeLight = $isIppnu ? '#fffbeb' : '#ecfdf5';
-                    $themeBorder = $isIppnu ? '#fcd34d' : '#a7f3d0';
+        @if($ketua)
+        {{-- ===== DESKTOP CHART ===== --}}
+        <div class="desktop-chart w-full overflow-x-auto">
+            <div class="mx-auto px-4" style="min-width: 1100px; width: fit-content;">
 
-                    // --- RECURSIVE DATA LOGIC ---
-                    // 1. Group all by parent_id for O(1) lookup
-                    $childrenMap = $pengurusTree->groupBy('parent_id');
+                {{-- === KETUA === --}}
+                <div class="flex flex-col items-center">
+                    <div class="org-card mx-auto" @click="activePerson = {!! personData($ketua) !!}; modalOpen = true">
+                        <img src="{{ personImg($ketua) }}" class="org-photo org-photo-lg" alt="{{ $ketua->kader->nama_lengkap }}">
+                        <div class="org-name text-[0.8rem]">{{ $ketua->kader->nama_lengkap }}</div>
+                        <div class="org-role">{{ $ketua->jabatan }}</div>
+                    </div>
 
-                    // 2. Find Root (Ketua) - Usually has parent_id NULL or distinct role 'Ketua'
-                    $root = $pengurusTree->first(fn($n) => $n->jabatan === 'Ketua');
-                    
-                    // Helper to get children
-                    $getChildren = fn($parentId) => $childrenMap->get($parentId) ?? collect();
-                @endphp
+                    {{-- Spine down to BPH --}}
+                    <div class="connector-v h-8"></div>
 
-                <style>
-                    .theme-border { border-color: {{ $themeColor }}; }
-                    .theme-bg-light { background-color: {{ $themeLight }}; }
-                    .theme-text { color: {{ $themeColor }}; }
-                    .org-card:hover { border-color: {{ $themeColor }}; }
-                    .org-role { color: {{ $themeColor }}; }
-                    .org-photo { border-color: {{ $themeLight }}; }
-                </style>
+                    {{-- === SEKRETARIS & BENDAHARA ROW === --}}
+                    <div class="relative flex justify-center items-start gap-24">
+                        {{-- Horizontal connector between Sek & Ben --}}
+                        <div class="connector-h absolute top-0" style="left: calc(50% - 140px); width: 280px;"></div>
 
-                @if($root)
-                <ul>
-                    <li>
-                        <!-- ROOT (KETUA) -->
-                        <div class="org-card mx-auto" @click="activePerson = {{ json_encode(['name' => $root->kader->nama_lengkap, 'role' => $root->jabatan, 'image' => $root->kader->foto_path ? asset('storage/' . $root->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($root->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $root->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                            <img src="{{ $root->kader->foto_path ? asset('storage/' . $root->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($root->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff' }}" class="org-photo" style="border-color: {{ $themeLight }}">
-                            <div class="org-name">{{ $root->kader->nama_lengkap }}</div>
-                            <div class="org-role" style="color: {{ $themeColor }}">{{ $root->jabatan }}</div>
+                        {{-- Sekretaris Branch --}}
+                        @if($sekretaris)
+                        <div class="flex flex-col items-center pt-6">
+                            <div class="connector-v h-6 -mt-6"></div>
+                            <div class="org-card" @click="activePerson = {!! personData($sekretaris) !!}; modalOpen = true">
+                                <img src="{{ personImg($sekretaris) }}" class="org-photo" alt="{{ $sekretaris->kader->nama_lengkap }}">
+                                <div class="org-name">{{ \Illuminate\Support\Str::words($sekretaris->kader->nama_lengkap, 2) }}</div>
+                                <div class="org-role">Sekretaris</div>
+                            </div>
+                            @if($sekretaris->wakilList->count())
+                                @foreach($sekretaris->wakilList as $wasek)
+                                <div class="connector-v h-3"></div>
+                                <div class="org-card-sm org-card org-card-row" @click="activePerson = {!! personData($wasek) !!}; modalOpen = true">
+                                    <img src="{{ personImg($wasek) }}" class="org-photo-mini" alt="{{ $wasek->kader->nama_lengkap }}">
+                                    <div>
+                                        <div class="org-name">{{ \Illuminate\Support\Str::words($wasek->kader->nama_lengkap, 2) }}</div>
+                                        <div class="org-role">W. Sekretaris</div>
+                                        @if($wasek->departemenData)
+                                        <div class="org-dept">{{ $wasek->departemenData->nama_departemen }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endforeach
+                            @endif
                         </div>
+                        @endif
 
-                        <!-- TIER 1 CHILDREN (Sek, Ben, Waket, Lembaga Head) -->
-                        @php
-                            $rootChildren = $getChildren($root->id);
-                            
-                            // Categorize Children for Layout
-                            $sekretarisGroup = $rootChildren->filter(fn($c) => str_contains($c->jabatan, 'Sekretaris'));
-                            $bendaharaGroup = $rootChildren->filter(fn($c) => str_contains($c->jabatan, 'Bendahara'));
-                            
-                            // Remaining are Departments & Lembaga
-                            $others = $rootChildren->reject(fn($c) => str_contains($c->jabatan, 'Sekretaris') || str_contains($c->jabatan, 'Bendahara'));
-                            
-                            $lembagaHeads = $others->filter(fn($c) => 
-                                ($c->departemenData && strtolower($c->departemenData->Status ?? '') === 'lembaga') ||
-                                in_array($c->jabatan, ['Direktur', 'Komandan'])
-                            );
-                            
-                            $deptHeads = $others->diff($lembagaHeads);
-                        @endphp
+                        {{-- Bendahara Branch --}}
+                        @if($bendahara)
+                        <div class="flex flex-col items-center pt-6">
+                            <div class="connector-v h-6 -mt-6"></div>
+                            <div class="org-card" @click="activePerson = {!! personData($bendahara) !!}; modalOpen = true">
+                                <img src="{{ personImg($bendahara) }}" class="org-photo" alt="{{ $bendahara->kader->nama_lengkap }}">
+                                <div class="org-name">{{ \Illuminate\Support\Str::words($bendahara->kader->nama_lengkap, 2) }}</div>
+                                <div class="org-role">Bendahara</div>
+                            </div>
+                            @if($bendahara->wakilList->count())
+                                @foreach($bendahara->wakilList as $wabend)
+                                <div class="connector-v h-3"></div>
+                                <div class="org-card-sm org-card org-card-row" @click="activePerson = {!! personData($wabend) !!}; modalOpen = true">
+                                    <img src="{{ personImg($wabend) }}" class="org-photo-mini" alt="{{ $wabend->kader->nama_lengkap }}">
+                                    <div>
+                                        <div class="org-name">{{ \Illuminate\Support\Str::words($wabend->kader->nama_lengkap, 2) }}</div>
+                                        <div class="org-role">W. Bendahara</div>
+                                        @if($wabend->departemenData)
+                                        <div class="org-dept">{{ $wabend->departemenData->nama_departemen }}</div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endforeach
+                            @endif
+                        </div>
+                        @endif
+                    </div>
 
-                        @if($rootChildren->count() > 0)
-                        <ul>
-                            <li>
-                                <!-- CONTAINER FOR SEK & BEN -->
-                                <div class="flex justify-center gap-12 mb-8 relative px-4">
-                                    <!-- SEKRETARIS BRANCH -->
-                                    @foreach($sekretarisGroup as $sek)
-                                        <div class="flex flex-col items-center">
-                                            <div class="org-card" @click="activePerson = {{ json_encode(['name' => $sek->kader->nama_lengkap, 'role' => $sek->jabatan, 'image' => $sek->kader->foto_path ? asset('storage/' . $sek->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($sek->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $sek->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                <img src="{{ $sek->kader->foto_path ? asset('storage/' . $sek->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($sek->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff' }}" class="org-photo" style="border-color: {{ $themeLight }}">
-                                                <div class="org-name">{{ \Illuminate\Support\Str::words($sek->kader->nama_lengkap, 2) }}</div>
-                                                <div class="org-role" style="color: {{ $themeColor }}">{{ $sek->jabatan }}</div>
-                                            </div>
-                                            
-                                            <!-- Sub-Sekretaris (Wakil) -->
-                                            @php $subSek = $getChildren($sek->id); @endphp
-                                            @if($subSek->count() > 0)
-                                                <div class="deputy-stack">
-                                                    @foreach($subSek as $sub)
-                                                        <div class="deputy-item">
-                                                            <div class="org-card" style="transform: scale(0.9);" @click="activePerson = {{ json_encode(['name' => $sub->kader->nama_lengkap, 'role' => $sub->jabatan, 'image' => $sub->kader->foto_path ? asset('storage/' . $sub->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($sub->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $sub->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                                <div class="org-name">{{ \Illuminate\Support\Str::words($sub->kader->nama_lengkap, 2) }}</div>
-                                                                <div class="org-role text-[10px]" style="color: {{ $themeColor }}">{{ $sub->jabatan }}</div>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                    {{-- Spine down to Departemen --}}
+                    <div class="connector-v h-10"></div>
 
-                                    <!-- BENDAHARA BRANCH -->
-                                    @foreach($bendaharaGroup as $ben)
-                                        <div class="flex flex-col items-center">
-                                            <div class="org-card" @click="activePerson = {{ json_encode(['name' => $ben->kader->nama_lengkap, 'role' => $ben->jabatan, 'image' => $ben->kader->foto_path ? asset('storage/' . $ben->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($ben->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $ben->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                <img src="{{ $ben->kader->foto_path ? asset('storage/' . $ben->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($ben->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff' }}" class="org-photo" style="border-color: {{ $themeLight }}">
-                                                <div class="org-name">{{ \Illuminate\Support\Str::words($ben->kader->nama_lengkap, 2) }}</div>
-                                                <div class="org-role" style="color: {{ $themeColor }}">{{ $ben->jabatan }}</div>
-                                            </div>
+                    {{-- === DEPARTEMEN SECTION LABEL === --}}
+                    <div class="section-label mb-4">Departemen</div>
+                    <div class="connector-v h-4"></div>
 
-                                            <!-- Sub-Bendahara (Wakil) -->
-                                            @php $subBen = $getChildren($ben->id); @endphp
-                                            @if($subBen->count() > 0)
-                                                <div class="deputy-stack">
-                                                    @foreach($subBen as $sub)
-                                                        <div class="deputy-item">
-                                                            <div class="org-card" style="transform: scale(0.9);" @click="activePerson = {{ json_encode(['name' => $sub->kader->nama_lengkap, 'role' => $sub->jabatan, 'image' => $sub->kader->foto_path ? asset('storage/' . $sub->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($sub->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $sub->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                                <div class="org-name">{{ \Illuminate\Support\Str::words($sub->kader->nama_lengkap, 2) }}</div>
-                                                                <div class="org-role text-[10px]" style="color: {{ $themeColor }}">{{ $sub->jabatan }}</div>
-                                                            </div>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                    {{-- === WAKIL KETUA ROW === --}}
+                    @if($departemenList->count())
+                    <div class="relative">
+                        {{-- Horizontal connector spanning all Waket --}}
+                        @if($departemenList->count() > 1)
+                        <div class="connector-h absolute top-0" style="left: 70px; right: 70px;"></div>
+                        @endif
+
+                        <div class="flex justify-center gap-3">
+                            @foreach($departemenList as $waket)
+                            <div class="flex flex-col items-center pt-5 px-1">
+                                {{-- Vertical stub from horizontal line --}}
+                                <div class="connector-v h-5 -mt-5"></div>
+
+                                {{-- Waket Card --}}
+                                <div class="org-card" @click="activePerson = {!! personData($waket) !!}; modalOpen = true">
+                                    <img src="{{ personImg($waket) }}" class="org-photo" alt="{{ $waket->kader->nama_lengkap }}">
+                                    <div class="org-name">{{ \Illuminate\Support\Str::words($waket->kader->nama_lengkap, 2) }}</div>
+                                    <div class="org-role">Wakil Ketua</div>
+                                    @if($waket->departemenData)
+                                    <div class="org-dept">{{ $waket->departemenData->nama_departemen }}</div>
+                                    @endif
                                 </div>
 
-                                <!-- NEXT TIER: DEPARTMENTS & LEMBAGA -->
-                                @if($deptHeads->count() > 0 || $lembagaHeads->count() > 0)
-                                <ul>
-                                    <!-- DEPARTMENTS ROW -->
-                                    <li class="w-full">
-                                         <!-- Main Horizontal Line for Dept Key -->
-                                         <div class="relative flex justify-center pt-8">
-                                             <div class="absolute top-0 left-1/2 -translate-x-1/2 h-8 w-[2px] bg-slate-300"></div>
-                                             
-                                             <!-- DEPARTMENTS CONTAINER -->
-                                             <div class="relative flex gap-4 pt-8 shrink-0">
-                                                @if($deptHeads->count() > 1)
-                                                    <div class="absolute top-8 left-10 right-10 h-[2px] border-t-2 border-slate-300"></div>
-                                                    <div class="absolute top-0 left-1/2 -translate-x-1/2 h-8 w-[2px] bg-slate-300"></div>
-                                                @elseif($deptHeads->count() == 1)
-                                                     <div class="absolute top-0 left-1/2 -translate-x-1/2 h-8 w-[2px] bg-slate-300"></div>
-                                                @endif
+                                {{-- Koordinator --}}
+                                @if($waket->koordinator)
+                                <div class="connector-v h-4"></div>
+                                <div class="org-card-sm org-card org-card-row" @click="activePerson = {!! personData($waket->koordinator) !!}; modalOpen = true">
+                                    <img src="{{ personImg($waket->koordinator) }}" class="org-photo-mini" alt="{{ $waket->koordinator->kader->nama_lengkap }}">
+                                    <div>
+                                        <div class="org-name">{{ \Illuminate\Support\Str::words($waket->koordinator->kader->nama_lengkap, 2) }}</div>
+                                        <div class="org-role">Koordinator</div>
+                                    </div>
+                                </div>
 
-                                                @foreach($deptHeads as $waket)
-                                                    <div class="flex flex-col items-center relative pt-4 px-2">
-                                                        @if($deptHeads->count() > 1)
-                                                            <div class="absolute top-0 left-1/2 -translate-x-1/2 h-4 w-[2px] bg-slate-300"></div>
-                                                        @endif
-                                                        
-                                                        <!-- WAKET CARD -->
-                                                        <div class="org-card" @click="activePerson = {{ json_encode(['name' => $waket->kader->nama_lengkap, 'role' => $waket->jabatan, 'image' => $waket->kader->foto_path ? asset('storage/' . $waket->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($waket->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $waket->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                            <img src="{{ $waket->kader->foto_path ? asset('storage/' . $waket->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($waket->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff' }}" class="org-photo" style="border-color: {{ $themeLight }}">
-                                                            <div class="org-name">{{ \Illuminate\Support\Str::words($waket->kader->nama_lengkap, 2) }}</div>
-                                                            <div class="org-role" style="color: {{ $themeColor }}">{{ \Illuminate\Support\Str::words($waket->jabatan, 2) }}</div>
-                                                        </div>
-
-                                                        <!-- CHILDREN OF WAKET (Koord/Members) -->
-                                                        @php $waketChildren = $getChildren($waket->id); @endphp
-                                                        
-                                                        @if($waketChildren->count() > 0)
-                                                            <div class="h-6 w-[2px] bg-slate-300"></div>
-                                                            
-                                                            <!-- Recursive rendering for Koord/Members -->
-                                                            @foreach($waketChildren as $child)
-                                                                 <!-- Koordinator or Member directly? -->
-                                                                 <div class="flex flex-col items-center">
-                                                                    <div class="org-card" style="border-color: {{ $themeBorder }}; width: 130px;" @click="activePerson = {{ json_encode(['name' => $child->kader->nama_lengkap, 'role' => $child->jabatan, 'image' => $child->kader->foto_path ? asset('storage/' . $child->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($child->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $child->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                                        <div class="org-name">{{ \Illuminate\Support\Str::words($child->kader->nama_lengkap, 2) }}</div>
-                                                                        <div class="org-role text-[10px]" style="color: {{ $themeColor }}">{{ $child->jabatan }}</div>
-                                                                    </div>
-                                                                    
-                                                                    <!-- Grandchildren (Members of Korodinator) -->
-                                                                    @php $grandChildren = $getChildren($child->id); @endphp
-                                                                    @if($grandChildren->count() > 0)
-                                                                        <div class="h-4 w-[2px] bg-slate-300"></div>
-                                                                        <div class="flex flex-col items-center">
-                                                                            @foreach($grandChildren as $gc)
-                                                                                 @if(!$loop->first)
-                                                                                    <div class="h-3 w-[2px] bg-slate-300"></div>
-                                                                                 @endif
-                                                                                 <div class="org-card" style="transform: scale(0.85); border-style: dashed;" @click="activePerson = {{ json_encode(['name' => $gc->kader->nama_lengkap, 'role' => $gc->jabatan, 'image' => $gc->kader->foto_path ? asset('storage/' . $gc->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($gc->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $gc->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                                                    <div class="org-name">{{ \Illuminate\Support\Str::words($gc->kader->nama_lengkap, 2) }}</div>
-                                                                                    <div class="org-role text-[9px]">Anggota</div>
-                                                                                </div>
-                                                                            @endforeach
-                                                                        </div>
-                                                                    @endif
-                                                                 </div>
-                                                                 <!-- Gap between multiple direct children of Waket if any -->
-                                                                 @if(!$loop->last) <div class="h-4"></div> @endif
-                                                            @endforeach
-                                                        @endif
-                                                    </div>
-                                                @endforeach
-                                             </div>
-                                         </div>
-
-                                         <!-- LEMBAGA SECTION (Separated) -->
-                                         @if($lembagaHeads->count() > 0)
-                                            <div class="mt-16 w-full relative pt-8">
-                                                <!-- Separator -->
-                                                <div class="absolute top-0 left-0 w-full border-t border-slate-200 dark:border-white/10"></div>
-                                                <!-- <span class="absolute top-[-10px] left-1/2 -translate-x-1/2 bg-slate-50 dark:bg-[#020617] px-4 text-xs font-bold tracking-widest text-slate-400 uppercase">Lembaga & Badan Semi Otonom</span> -->
-                                                
-                                                <div class="flex flex-wrap justify-center gap-8 pt-6">
-                                                    @foreach($lembagaHeads as $head)
-                                                        <div class="flex flex-col items-center">
-                                                            <!-- HEAD CARD -->
-                                                            <div class="org-card" style="border-color: {{ $themeBorder }}; background-color: {{ $themeLight }};" @click="activePerson = {{ json_encode(['name' => $head->kader->nama_lengkap, 'role' => $head->jabatan, 'image' => $head->kader->foto_path ? asset('storage/' . $head->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($head->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $head->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                                <div class="org-name">{{ \Illuminate\Support\Str::words($head->kader->nama_lengkap, 2) }}</div>
-                                                                <div class="org-role" style="color: {{ $themeColor }}">{{ $head->jabatan }}</div>
-                                                            </div>
-                                                            
-                                                            <!-- MEMBERS -->
-                                                            @php $lembagaMembers = $getChildren($head->id); @endphp
-                                                            @if($lembagaMembers->count() > 0)
-                                                                <div class="h-4 w-[2px] bg-slate-300"></div>
-                                                                <div class="flex flex-col items-center">
-                                                                    @foreach($lembagaMembers as $lm)
-                                                                        @if(!$loop->first)
-                                                                            <div class="h-3 w-[2px] bg-slate-300"></div>
-                                                                        @endif
-                                                                        <div class="org-card" style="transform: scale(0.85);" @click="activePerson = {{ json_encode(['name' => $lm->kader->nama_lengkap, 'role' => $lm->jabatan, 'image' => $lm->kader->foto_path ? asset('storage/' . $lm->kader->foto_path) : 'https://ui-avatars.com/api/?name=' . urlencode($lm->kader->nama_lengkap) . '&background=' . substr($themeColor, 1) . '&color=fff', 'quote' => $lm->kader->quote, 'roleClass' => 'bg-'.$theme.'-600']) }}; modalOpen = true">
-                                                                            <div class="org-name">{{ \Illuminate\Support\Str::words($lm->kader->nama_lengkap, 2) }}</div>
-                                                                            <div class="org-role text-[9px]">Anggota</div>
-                                                                        </div>
-                                                                    @endforeach
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                    @endforeach
-                                                </div>
+                                    {{-- Anggota under Koordinator --}}
+                                    @if($waket->koordinator->anggotaList->count())
+                                        @foreach($waket->koordinator->anggotaList as $anggota)
+                                        <div class="connector-v h-3"></div>
+                                        <div class="org-card-xs org-card org-card-row" @click="activePerson = {!! personData($anggota) !!}; modalOpen = true">
+                                            <img src="{{ personImg($anggota) }}" class="org-photo-mini-xs" alt="{{ $anggota->kader->nama_lengkap }}">
+                                            <div>
+                                                <div class="org-name">{{ \Illuminate\Support\Str::words($anggota->kader->nama_lengkap, 2) }}</div>
+                                                <div class="org-role">Anggota</div>
                                             </div>
-                                         @endif
-                                    </li>
-                                </ul>
+                                        </div>
+                                        @endforeach
+                                    @endif
                                 @endif
-                            </li>
-                        </ul>
+
+                                {{-- Anggota directly under Waket (no Koordinator) --}}
+                                @if($waket->anggotaLangsung->count())
+                                    @foreach($waket->anggotaLangsung as $anggota)
+                                    <div class="connector-v h-3"></div>
+                                    <div class="org-card-xs org-card org-card-row" @click="activePerson = {!! personData($anggota) !!}; modalOpen = true">
+                                        <img src="{{ personImg($anggota) }}" class="org-photo-mini-xs" alt="{{ $anggota->kader->nama_lengkap }}">
+                                        <div>
+                                            <div class="org-name">{{ \Illuminate\Support\Str::words($anggota->kader->nama_lengkap, 2) }}</div>
+                                            <div class="org-role">Anggota</div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Spine down to Lembaga --}}
+                    @if($lembagaList->count())
+                    <div class="connector-v h-10"></div>
+
+                    {{-- === LEMBAGA SECTION LABEL === --}}
+                    <div class="section-label mb-4">Lembaga & Badan</div>
+                    <div class="connector-v h-4"></div>
+
+                    {{-- === LEMBAGA ROW === --}}
+                    <div class="relative">
+                        @if($lembagaList->count() > 1)
+                        <div class="connector-h absolute top-0" style="left: 70px; right: 70px;"></div>
                         @endif
-                    </li>
-                </ul>
-                @endif
+
+                        <div class="flex justify-center gap-4">
+                            @foreach($lembagaList as $head)
+                            <div class="flex flex-col items-center pt-5 px-1">
+                                <div class="connector-v h-5 -mt-5"></div>
+
+                                {{-- Lembaga Head Card --}}
+                                <div class="org-card org-card-lembaga" @click="activePerson = {!! personData($head) !!}; modalOpen = true">
+                                    <img src="{{ personImg($head) }}" class="org-photo" alt="{{ $head->kader->nama_lengkap }}">
+                                    <div class="org-name">{{ \Illuminate\Support\Str::words($head->kader->nama_lengkap, 2) }}</div>
+                                    <div class="org-role">{{ $head->jabatan }}</div>
+                                    @if($head->departemenData)
+                                    <div class="org-dept">{{ $head->departemenData->nama_departemen }}</div>
+                                    @endif
+                                </div>
+
+                                {{-- Lembaga Anggota --}}
+                                @if($head->anggotaList->count())
+                                    @foreach($head->anggotaList as $anggota)
+                                    <div class="connector-v h-3"></div>
+                                    <div class="org-card-xs org-card org-card-row" @click="activePerson = {!! personData($anggota) !!}; modalOpen = true">
+                                        <img src="{{ personImg($anggota) }}" class="org-photo-mini-xs" alt="{{ $anggota->kader->nama_lengkap }}">
+                                        <div>
+                                            <div class="org-name">{{ \Illuminate\Support\Str::words($anggota->kader->nama_lengkap, 2) }}</div>
+                                            <div class="org-role">Anggota</div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
+
+                </div>{{-- end flex-col items-center (main spine) --}}
             </div>
         </div>
+
+        {{-- ===== MOBILE CHART (Accordion) ===== --}}
+        <div class="mobile-chart max-w-lg mx-auto px-4" x-data="{ openSection: 'bph' }">
+
+            {{-- Ketua Card (always visible) --}}
+            <div class="flex flex-col items-center mb-6">
+                <div class="org-card mx-auto" style="width: 180px;" @click="activePerson = {!! personData($ketua) !!}; modalOpen = true">
+                    <img src="{{ personImg($ketua) }}" class="org-photo org-photo-lg" alt="{{ $ketua->kader->nama_lengkap }}">
+                    <div class="org-name text-[0.85rem]">{{ $ketua->kader->nama_lengkap }}</div>
+                    <div class="org-role">{{ $ketua->jabatan }}</div>
+                </div>
+            </div>
+
+            {{-- BPH Section --}}
+            <div class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--dp-border); background: var(--dp-bg-surface);">
+                <button @click="openSection = openSection === 'bph' ? '' : 'bph'"
+                    class="w-full px-4 py-3 flex items-center justify-between text-left">
+                    <span class="font-bold text-sm" style="color: var(--dp-text-primary);">Badan Pengurus Harian</span>
+                    <svg :class="openSection === 'bph' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openSection === 'bph'" x-collapse>
+                    <div class="px-4 pb-4 space-y-2">
+                        @if($sekretaris)
+                        <div class="p-3 rounded-lg" style="background: var(--dp-bg-surface-2);">
+                            <p class="font-bold text-xs" style="color: var(--dp-text-primary);">{{ $sekretaris->kader->nama_lengkap }}</p>
+                            <p class="text-[0.65rem] uppercase font-semibold" style="color: var(--dp-gold);">Sekretaris</p>
+                            @foreach($sekretaris->wakilList as $wasek)
+                            <div class="mt-1 ml-3 flex items-center gap-2">
+                                <div class="w-1 h-1 rounded-full" style="background: var(--dp-gold);"></div>
+                                <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $wasek->kader->nama_lengkap }} <span class="opacity-60">- {{ $wasek->departemenData->nama_departemen ?? '' }}</span></span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+                        @if($bendahara)
+                        <div class="p-3 rounded-lg" style="background: var(--dp-bg-surface-2);">
+                            <p class="font-bold text-xs" style="color: var(--dp-text-primary);">{{ $bendahara->kader->nama_lengkap }}</p>
+                            <p class="text-[0.65rem] uppercase font-semibold" style="color: var(--dp-gold);">Bendahara</p>
+                            @foreach($bendahara->wakilList as $wabend)
+                            <div class="mt-1 ml-3 flex items-center gap-2">
+                                <div class="w-1 h-1 rounded-full" style="background: var(--dp-gold);"></div>
+                                <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $wabend->kader->nama_lengkap }} <span class="opacity-60">- {{ $wabend->departemenData->nama_departemen ?? '' }}</span></span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Departemen Sections --}}
+            @foreach($departemenList as $waket)
+            <div class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--dp-border); background: var(--dp-bg-surface);">
+                <button @click="openSection = openSection === 'dept-{{ $loop->index }}' ? '' : 'dept-{{ $loop->index }}'"
+                    class="w-full px-4 py-3 flex items-center justify-between text-left">
+                    <div>
+                        <span class="font-bold text-sm" style="color: var(--dp-text-primary);">{{ $waket->departemenData->nama_departemen ?? 'Departemen' }}</span>
+                        <span class="text-xs ml-2" style="color: var(--dp-text-secondary);">{{ \Illuminate\Support\Str::words($waket->kader->nama_lengkap, 2) }}</span>
+                    </div>
+                    <svg :class="openSection === 'dept-{{ $loop->index }}' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openSection === 'dept-{{ $loop->index }}'" x-collapse>
+                    <div class="px-4 pb-4 space-y-1">
+                        <div class="p-2 rounded flex items-center gap-2" style="background: var(--dp-bg-surface-2);">
+                            <span class="text-[0.6rem] uppercase font-bold px-2 py-0.5 rounded" style="background: var(--dp-bg-primary); color: var(--dp-gold);">Waket</span>
+                            <span class="text-xs font-semibold" style="color: var(--dp-text-primary);">{{ $waket->kader->nama_lengkap }}</span>
+                        </div>
+                        @if($waket->koordinator)
+                        <div class="p-2 rounded flex items-center gap-2 ml-3" style="background: var(--dp-bg-surface-2);">
+                            <span class="text-[0.6rem] uppercase font-bold px-2 py-0.5 rounded" style="background: var(--dp-gold-tint); color: var(--dp-gold);">Koord</span>
+                            <span class="text-xs" style="color: var(--dp-text-primary);">{{ $waket->koordinator->kader->nama_lengkap }}</span>
+                        </div>
+                            @foreach($waket->koordinator->anggotaList as $anggota)
+                            <div class="p-2 rounded flex items-center gap-2 ml-6">
+                                <div class="w-1 h-1 rounded-full" style="background: var(--dp-gold);"></div>
+                                <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $anggota->kader->nama_lengkap }}</span>
+                            </div>
+                            @endforeach
+                        @endif
+                        @foreach($waket->anggotaLangsung as $anggota)
+                        <div class="p-2 rounded flex items-center gap-2 ml-3">
+                            <div class="w-1 h-1 rounded-full" style="background: var(--dp-gold);"></div>
+                            <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $anggota->kader->nama_lengkap }}</span>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endforeach
+
+            {{-- Lembaga Sections --}}
+            @if($lembagaList->count())
+            <div class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--dp-border-gold); background: var(--dp-bg-surface);">
+                <button @click="openSection = openSection === 'lembaga' ? '' : 'lembaga'"
+                    class="w-full px-4 py-3 flex items-center justify-between text-left">
+                    <span class="font-bold text-sm" style="color: var(--dp-text-primary);">Lembaga & Badan</span>
+                    <svg :class="openSection === 'lembaga' ? 'rotate-180' : ''" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="openSection === 'lembaga'" x-collapse>
+                    <div class="px-4 pb-4 space-y-2">
+                        @foreach($lembagaList as $head)
+                        <div class="p-3 rounded-lg" style="background: var(--dp-gold-tint);">
+                            <p class="font-bold text-xs" style="color: var(--dp-text-primary);">{{ $head->kader->nama_lengkap }}</p>
+                            <p class="text-[0.65rem] uppercase font-semibold" style="color: var(--dp-gold);">{{ $head->jabatan }} {{ $head->departemenData->nama_departemen ?? '' }}</p>
+                            @foreach($head->anggotaList as $anggota)
+                            <div class="mt-1 ml-3 flex items-center gap-2">
+                                <div class="w-1 h-1 rounded-full" style="background: var(--dp-gold);"></div>
+                                <span class="text-xs" style="color: var(--dp-text-secondary);">{{ $anggota->kader->nama_lengkap }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+
+        @else
+        {{-- Empty state --}}
+        <div class="text-center py-20">
+            <p class="text-lg" style="color: var(--dp-text-secondary);">Data pengurus {{ $orgName }} belum tersedia.</p>
+        </div>
+        @endif
     </main>
 
+    {{-- ===== PERSON MODAL ===== --}}
     <div x-show="modalOpen" class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;"
         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200"
         x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
-        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" @click="modalOpen = false"></div>
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" @click="modalOpen = false"></div>
         <div class="relative min-h-screen flex items-center justify-center p-4">
-            <div
-                class="relative bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all">
+            <div class="relative rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden"
+                 style="background: var(--dp-bg-surface);"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100">
                 <button @click="modalOpen = false"
-                    class="absolute top-4 right-4 z-10 bg-black/50 text-white rounded-full p-1"><span
-                        class="material-symbols-outlined text-lg">close</span></button>
-                <div class="w-full h-80 bg-gray-100 relative">
-                    <img :src="activePerson.image" class="w-full h-full object-cover">
-                    <div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/80 to-transparent"></div>
-                    <div class="absolute bottom-4 left-4 right-4 text-white">
+                    class="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center"
+                    style="background: rgba(0,0,0,0.4); color: white;">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+                <div class="w-full h-72 relative" style="background: var(--dp-bg-primary);">
+                    <img :src="activePerson.image" class="w-full h-full object-cover opacity-90" alt="">
+                    <div class="absolute inset-x-0 bottom-0 h-32" style="background: linear-gradient(to top, var(--dp-bg-primary), transparent);"></div>
+                    <div class="absolute bottom-4 left-4 right-4">
                         <div class="inline-block px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider mb-2"
-                            :class="activePerson.roleClass || 'bg-emerald-600'" x-text="activePerson.role"></div>
-                        <h3 class="font-display font-black text-2xl leading-tight" x-text="activePerson.name"></h3>
+                             style="background: var(--dp-gold); color: #08332c;"
+                             x-text="activePerson.role"></div>
+                        <template x-if="activePerson.dept">
+                            <div class="text-xs mb-1" style="color: var(--dp-gold-light);" x-text="activePerson.dept"></div>
+                        </template>
+                        <h3 class="font-display font-black text-2xl leading-tight" style="color: var(--dp-text-on-primary);" x-text="activePerson.name"></h3>
                     </div>
                 </div>
-                <div class="p-6 bg-gray-50">
-                    <p class="text-gray-600 italic text-sm" x-text="activePerson.quote || 'Belum ada quotes.'"></p>
+                <div class="p-5" style="background: var(--dp-bg-surface-2);">
+                    <p class="italic text-sm" style="color: var(--dp-text-secondary);" x-text="activePerson.quote || 'Belum ada quote.'"></p>
                 </div>
             </div>
         </div>
     </div>
+
     @include('partials.footer')
 </body>
 

@@ -6,162 +6,274 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login Pengurus - DASI Pelajar</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
-    <!-- Fonts -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;700;800;900&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
-    <!-- Tailwind -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        emerald: { 900: '#022C22', 800: '#064E3B', 600: '#059669', 500: '#10b981', 400: '#34D399', 50: '#ecfdf5' },
-                        amber: { 900: '#78350F', 700: '#B45309', 400: '#FBBF24', 50: '#fffbeb' },
-                        surface: { light: '#F8FAFC', card: '#FFFFFF', dark: '#0F172A' }
-                    },
-                    fontFamily: {
-                        display: ['Outfit', 'sans-serif'],
-                        body: ['Inter', 'sans-serif'],
-                    },
-                    animation: {
-                        'blob': 'blob 7s infinite',
-                    },
-                    keyframes: {
-                        blob: {
-                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
-                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
-                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
-                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+
+    @include('partials.theme-init')
+
     <style>
-        .glass {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+        body { font-family: 'Inter', sans-serif; }
+        .font-display { font-family: 'Outfit', sans-serif; }
+
+        /* Animated pattern on branding panel */
+        .login-pattern {
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(186,158,111,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(186,158,111,0.06) 0%, transparent 40%),
+                radial-gradient(circle at 60% 80%, rgba(186,158,111,0.05) 0%, transparent 45%);
         }
 
-        .dark .glass {
-            background: rgba(15, 23, 42, 0.7);
+        /* Subtle floating animation */
+        @keyframes float-slow {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+        .float-anim { animation: float-slow 6s ease-in-out infinite; }
+        .float-anim-delay { animation: float-slow 6s ease-in-out 2s infinite; }
+
+        /* Glass card */
+        .login-glass {
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        .dark .login-glass {
+            background: rgba(15,42,30,0.85);
+        }
+
+        /* Input focus ring */
+        .dp-input:focus {
+            border-color: var(--dp-gold);
+            box-shadow: 0 0 0 3px var(--dp-gold-tint);
+            outline: none;
         }
     </style>
 </head>
 
-<body
-    class="font-body text-slate-800 dark:text-gray-100 antialiased bg-surface-light dark:bg-emerald-950 transition-colors duration-300 min-h-screen flex items-center justify-center relative overflow-hidden">
+<body class="antialiased min-h-screen" style="background: var(--dp-bg-page); color: var(--dp-text-primary);">
 
-    <!-- Ambient Background -->
-    <div class="absolute inset-0 z-0 overflow-hidden">
-        <div
-            class="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-emerald-400/30 rounded-full blur-[100px] animate-blob mix-blend-multiply dark:mix-blend-normal">
-        </div>
-        <div
-            class="absolute top-[20%] -right-[10%] w-[40%] h-[40%] bg-amber-300/30 rounded-full blur-[100px] animate-blob animation-delay-2000 mix-blend-multiply dark:mix-blend-normal">
-        </div>
-        <div
-            class="absolute -bottom-[10%] left-[20%] w-[50%] h-[50%] bg-emerald-600/30 rounded-full blur-[100px] animate-blob animation-delay-4000 mix-blend-multiply dark:mix-blend-normal">
-        </div>
-    </div>
+    <div class="min-h-screen flex flex-col lg:flex-row">
 
-    <!-- Login Card -->
-    <div class="relative z-10 w-full max-w-md p-6">
-        <div class="glass border border-white/20 rounded-3xl shadow-2xl overflow-hidden relative">
+        {{-- ====== LEFT PANEL — Branding (hidden mobile, visible lg+) ====== --}}
+        <div class="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden flex-col justify-between"
+             style="background: var(--dp-bg-primary);">
 
-            <!-- Branding Header -->
-            <div class="px-8 pt-10 pb-6 text-center">
-                <div
-                    class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-600/20 mb-6">
-                    <!-- <span class="font-display font-black text-3xl">D</span> -->
-                    <img src="{{ asset('img/logo-dark.png') }}?v=2" alt="Logo" class="w-12 h-12">
+            {{-- Pattern overlay --}}
+            <div class="absolute inset-0 login-pattern"></div>
 
+            {{-- Decorative circles --}}
+            <div class="absolute -top-20 -left-20 w-72 h-72 rounded-full float-anim" style="background: rgba(186,158,111,0.06);"></div>
+            <div class="absolute -bottom-32 -right-16 w-96 h-96 rounded-full float-anim-delay" style="background: rgba(186,158,111,0.04);"></div>
+            <div class="absolute top-1/3 right-1/4 w-48 h-48 rounded-full float-anim" style="background: rgba(186,158,111,0.05);"></div>
+
+            {{-- Content --}}
+            <div class="relative z-10 flex flex-col justify-center flex-1 px-12 xl:px-20">
+
+                {{-- Logo + Brand --}}
+                <div class="mb-12">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg" style="background: var(--dp-gold);">
+                            <img src="{{ asset('img/logo-dark.png') }}" alt="Logo" class="w-10 h-10">
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold tracking-tight" style="color: var(--dp-text-on-primary);">
+                                DASI<span style="color: var(--dp-gold);">PELAJAR</span>
+                            </h1>
+                            <p class="text-xs tracking-widest uppercase" style="color: var(--dp-gold-light); opacity: 0.7;">
+                                PC IPNU IPPNU Kediri
+                            </p>
+                        </div>
+                    </div>
+
+                    <h2 class="font-display text-4xl xl:text-5xl font-bold leading-tight mb-6" style="color: var(--dp-text-on-primary);">
+                        Digitalisasi<br>
+                        <span style="color: var(--dp-gold);">Administrasi</span><br>
+                        & Sistem Informasi
+                    </h2>
+
+                    <p class="text-base leading-relaxed max-w-md" style="color: rgba(244,244,244,0.6);">
+                        Platform operasional organisasi untuk menertibkan dan mengendalikan pergerakan pelajar NU se-Kabupaten Kediri.
+                    </p>
                 </div>
-                <h2 class="font-display font-bold text-2xl text-gray-900 dark:text-white mb-2">Selamat Datang</h2>
-                <p class="text-gray-500 dark:text-gray-400 text-sm">Silakan login untuk mengakses Dashboard.</p>
+
+                {{-- Stats row --}}
+                <div class="flex gap-8">
+                    <div>
+                        <div class="font-display text-3xl font-bold" style="color: var(--dp-gold);">26</div>
+                        <div class="text-xs uppercase tracking-wider mt-1" style="color: rgba(244,244,244,0.5);">PAC</div>
+                    </div>
+                    <div class="w-px" style="background: rgba(186,158,111,0.2);"></div>
+                    <div>
+                        <div class="font-display text-3xl font-bold" style="color: var(--dp-gold);">343</div>
+                        <div class="text-xs uppercase tracking-wider mt-1" style="color: rgba(244,244,244,0.5);">Ranting</div>
+                    </div>
+                    <div class="w-px" style="background: rgba(186,158,111,0.2);"></div>
+                    <div>
+                        <div class="font-display text-3xl font-bold" style="color: var(--dp-gold);">2</div>
+                        <div class="text-xs uppercase tracking-wider mt-1" style="color: rgba(244,244,244,0.5);">Organisasi</div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Form -->
-            <form action="{{ route('login.post') }}" method="POST" class="px-8 pb-10 space-y-5">
-                @csrf
-
-                @if($errors->any())
-                    <div
-                        class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-medium flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm">error</span>
-                        {{ $errors->first() }}
-                    </div>
-                @endif
-
-                <!-- Email -->
-                <div class="space-y-1">
-                    <label for="email"
-                        class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Email
-                        Address</label>
-                    <div class="relative group">
-                        <span
-                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-500 transition-colors">
-                            <span class="material-symbols-outlined text-xl">mail</span>
-                        </span>
-                        <input type="email" name="email" id="email" required autofocus
-                            class="block w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
-                            placeholder="nama@dasipelajar.or.id">
-                    </div>
-                </div>
-
-                <!-- Password -->
-                <div class="space-y-1">
-                    <div class="flex items-center justify-between">
-                        <label for="password"
-                            class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Password</label>
-                    </div>
-                    <div class="relative group">
-                        <span
-                            class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-500 transition-colors">
-                            <span class="material-symbols-outlined text-xl">lock</span>
-                        </span>
-                        <input type="password" name="password" id="password" required
-                            class="block w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 text-gray-900 dark:text-white placeholder-gray-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all"
-                            placeholder="••••••••">
-                    </div>
-                </div>
-
-                <!-- Remember & Forgot -->
-                <div class="flex items-center justify-between text-sm">
-                    <label class="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" name="remember"
-                            class="w-4 h-4 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500 transition-colors">
-                        <span
-                            class="text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Ingat
-                            Saya</span>
-                    </label>
-                </div>
-
-                <!-- Submit -->
-                <button type="submit"
-                    class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-emerald-600/30 transform transition-all active:scale-[0.98]">
-                    <span>Sign In</span>
-                    <span class="material-symbols-outlined text-sm">arrow_forward</span>
-                </button>
-
-            </form>
-
-            <!-- Footer -->
-            <div
-                class="bg-gray-50 dark:bg-gray-800/50 px-8 py-4 text-center border-t border-gray-100 dark:border-white/5">
-                <p class="text-xs text-gray-400">
-                    &copy; 2025 DasiPelajar. PC IPNU IPPNU Kediri.
+            {{-- Bottom bar --}}
+            <div class="relative z-10 px-12 xl:px-20 py-6 flex items-center justify-between" style="border-top: 1px solid rgba(186,158,111,0.15);">
+                <p class="text-xs" style="color: rgba(244,244,244,0.4);">
+                    &copy; {{ date('Y') }} DASI Pelajar
                 </p>
+                <div class="flex gap-4">
+                    <a href="/" class="text-xs hover:underline" style="color: var(--dp-gold-light); opacity: 0.6;">
+                        Beranda
+                    </a>
+                    <a href="/berita" class="text-xs hover:underline" style="color: var(--dp-gold-light); opacity: 0.6;">
+                        Berita
+                    </a>
+                </div>
             </div>
         </div>
+
+        {{-- ====== RIGHT PANEL — Login Form ====== --}}
+        <div class="flex-1 flex items-center justify-center px-6 py-12 lg:px-12 relative"
+             style="background: var(--dp-bg-page);">
+
+            {{-- Mobile branding (visible < lg) --}}
+            <div class="absolute top-0 left-0 right-0 lg:hidden">
+                <div class="px-6 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: var(--dp-bg-primary);">
+                            <img src="{{ asset('img/logo-dark.png') }}" alt="Logo" class="w-6 h-6">
+                        </div>
+                        <span class="text-sm font-bold tracking-tight" style="color: var(--dp-text-primary);">
+                            DASI<span style="color: var(--dp-gold);">PELAJAR</span>
+                        </span>
+                    </div>
+                    {{-- Theme toggle --}}
+                    <button onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');"
+                            class="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+                            style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                        <span class="material-symbols-outlined text-lg" style="color: var(--dp-text-secondary);">dark_mode</span>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Theme toggle desktop (top right) --}}
+            <div class="hidden lg:block absolute top-6 right-6">
+                <button onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');"
+                        class="w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+                        style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+                    <span class="material-symbols-outlined text-lg" style="color: var(--dp-text-secondary);">dark_mode</span>
+                </button>
+            </div>
+
+            {{-- Form card --}}
+            <div class="w-full max-w-md mt-16 lg:mt-0">
+
+                {{-- Heading --}}
+                <div class="mb-8">
+                    <h2 class="font-display text-3xl font-bold mb-2" style="color: var(--dp-text-primary);">
+                        Selamat Datang
+                    </h2>
+                    <p class="text-sm" style="color: var(--dp-text-secondary);">
+                        Masuk ke dashboard pengurus untuk mengelola organisasi.
+                    </p>
+                </div>
+
+                {{-- Card --}}
+                <div class="login-glass rounded-2xl p-8 shadow-sm" style="border: 1px solid var(--dp-border);">
+
+                    {{-- Error --}}
+                    @if($errors->any())
+                        <div class="mb-6 p-3.5 rounded-xl flex items-center gap-2.5 text-sm"
+                             style="background: var(--dp-danger-tint); color: var(--dp-danger); border: 1px solid rgba(232,70,58,0.15);">
+                            <span class="material-symbols-outlined text-lg">error</span>
+                            {{ $errors->first() }}
+                        </div>
+                    @endif
+
+                    <form action="{{ route('login.post') }}" method="POST" class="space-y-5">
+                        @csrf
+
+                        {{-- Email --}}
+                        <div>
+                            <label for="email" class="block text-xs font-semibold uppercase tracking-wider mb-2"
+                                   style="color: var(--dp-text-secondary);">
+                                Email Address
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
+                                      style="color: var(--dp-text-secondary);">
+                                    <span class="material-symbols-outlined text-xl">mail</span>
+                                </span>
+                                <input type="email" name="email" id="email" required autofocus
+                                       value="{{ old('email') }}"
+                                       class="dp-input block w-full pl-11 pr-4 py-3 rounded-xl text-sm transition-all"
+                                       style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border-strong); color: var(--dp-text-primary);"
+                                       placeholder="nama@dasipelajar.or.id">
+                            </div>
+                        </div>
+
+                        {{-- Password --}}
+                        <div>
+                            <label for="password" class="block text-xs font-semibold uppercase tracking-wider mb-2"
+                                   style="color: var(--dp-text-secondary);">
+                                Password
+                            </label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none"
+                                      style="color: var(--dp-text-secondary);">
+                                    <span class="material-symbols-outlined text-xl">lock</span>
+                                </span>
+                                <input type="password" name="password" id="password" required
+                                       class="dp-input block w-full pl-11 pr-4 py-3 rounded-xl text-sm transition-all"
+                                       style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border-strong); color: var(--dp-text-primary);"
+                                       placeholder="Masukkan password">
+                            </div>
+                        </div>
+
+                        {{-- Remember me --}}
+                        <div class="flex items-center justify-between">
+                            <label class="flex items-center gap-2 cursor-pointer group">
+                                <input type="checkbox" name="remember"
+                                       class="w-4 h-4 rounded transition-colors"
+                                       style="accent-color: #08332c;">
+                                <span class="text-sm" style="color: var(--dp-text-secondary);">Ingat Saya</span>
+                            </label>
+                        </div>
+
+                        {{-- Submit --}}
+                        <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 font-semibold py-3.5 rounded-xl shadow-lg transition-all active:scale-[0.98]"
+                                style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);"
+                                onmouseover="this.style.background='var(--dp-bg-primary-hover)'"
+                                onmouseout="this.style.background='var(--dp-bg-primary)'">
+                            <span>Masuk ke Dashboard</span>
+                            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        </button>
+                    </form>
+                </div>
+
+                {{-- Bottom info --}}
+                <div class="mt-6 text-center">
+                    <p class="text-xs" style="color: var(--dp-text-secondary); opacity: 0.7;">
+                        Akses terbatas untuk pengurus PC IPNU IPPNU Kediri.
+                    </p>
+                    <a href="/" class="inline-flex items-center gap-1 mt-3 text-xs font-semibold transition-colors"
+                       style="color: var(--dp-gold);">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        Kembali ke Beranda
+                    </a>
+                </div>
+
+                {{-- Footer mobile --}}
+                <div class="lg:hidden mt-10 text-center">
+                    <p class="text-xs" style="color: var(--dp-text-secondary); opacity: 0.5;">
+                        &copy; {{ date('Y') }} DASI Pelajar. PC IPNU IPPNU Kediri.
+                    </p>
+                </div>
+            </div>
+        </div>
+
     </div>
 
 </body>

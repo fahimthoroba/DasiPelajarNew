@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PengaturanWeb;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class PengaturanWebAdminController extends Controller
@@ -43,6 +44,7 @@ class PengaturanWebAdminController extends Controller
         }
 
         $pengaturan->update($validated);
+        Cache::forget('pengaturan_web');
 
         return redirect()->route('dashboard.pengaturan.index')->with('success', 'Pengaturan berhasil diperbarui!');
     }

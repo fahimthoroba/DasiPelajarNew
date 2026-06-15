@@ -3,216 +3,343 @@
 @section('title', 'Edit Berita')
 
 @section('content')
-    <!-- TinyMCE -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
 
-    <div class="mb-6">
-        <a href="{{ route('dashboard.berita.index') }}"
-            class="inline-flex items-center gap-2 text-gray-500 hover:text-emerald-600 transition-colors mb-2 text-sm">
-            <span class="material-symbols-outlined text-lg">arrow_back</span>
-            Kembali ke Daftar
-        </a>
-        <h1 class="text-2xl font-display font-bold text-gray-900 dark:text-white">Edit Berita</h1>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinymce/6.8.3/tinymce.min.js" referrerpolicy="origin"></script>
+
+{{-- Back + Header --}}
+<div class="mb-5">
+    <a href="{{ route('dashboard.berita.index') }}"
+       class="inline-flex items-center gap-1.5 text-sm mb-3 transition-colors"
+       style="color: var(--dp-text-secondary);"
+       onmouseover="this.style.color='var(--dp-bg-primary)'"
+       onmouseout="this.style.color='var(--dp-text-secondary)'">
+        <span class="material-symbols-outlined text-base">arrow_back</span>
+        Kembali ke Daftar
+    </a>
+    <div class="flex items-center gap-3">
+        <h1 class="font-display font-bold text-2xl" style="color: var(--dp-text-primary);">Edit Berita</h1>
+        @if($beritum->status === 'published')
+            <a href="{{ route('berita.show', $beritum->slug) }}" target="_blank"
+               class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-colors"
+               style="border: 1px solid var(--dp-border); color: var(--dp-text-secondary);"
+               onmouseover="this.style.borderColor='var(--dp-gold)'; this.style.color='var(--dp-gold)'"
+               onmouseout="this.style.borderColor='var(--dp-border)'; this.style.color='var(--dp-text-secondary)'">
+                <span class="material-symbols-outlined text-sm">open_in_new</span>
+                Lihat di Website
+            </a>
+        @endif
+    </div>
+</div>
+
+@php
+    $existingTags = old('tags_input', $beritum->tags->pluck('nama')->join(','));
+@endphp
+
+<form action="{{ route('dashboard.berita.update', $beritum->id) }}" method="POST" enctype="multipart/form-data"
+      class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    @csrf
+    @method('PUT')
+
+    {{-- ===== LEFT: Content ===== --}}
+    <div class="lg:col-span-2 space-y-5">
+
+        {{-- Judul --}}
+        <div class="rounded-xl p-5"
+             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+            <label class="block text-xs font-bold uppercase tracking-widest mb-2"
+                   style="color: var(--dp-text-secondary);">Judul Berita</label>
+            <input type="text" name="judul" value="{{ old('judul', $beritum->judul) }}" required
+                   class="w-full px-4 py-3 rounded-lg font-display font-bold text-xl outline-none transition-colors"
+                   style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);"
+                   onfocus="this.style.borderColor='var(--dp-gold)'"
+                   onblur="this.style.borderColor='var(--dp-border)'">
+            @error('judul')
+                <p class="text-xs mt-1.5" style="color: var(--dp-danger);">{{ $message }}</p>
+            @enderror
+        </div>
+
+        {{-- Ringkasan --}}
+        <div class="rounded-xl p-5"
+             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+            <label class="block text-xs font-bold uppercase tracking-widest mb-2"
+                   style="color: var(--dp-text-secondary);">
+                Ringkasan
+                <span class="normal-case text-[10px] font-normal ml-1" style="color: var(--dp-text-secondary);">
+                    (opsional · maks 500 karakter)
+                </span>
+            </label>
+            <textarea name="ringkasan" rows="3" maxlength="500"
+                      class="w-full px-4 py-3 rounded-lg text-sm outline-none transition-colors resize-none"
+                      style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);"
+                      onfocus="this.style.borderColor='var(--dp-gold)'"
+                      onblur="this.style.borderColor='var(--dp-border)'">{{ old('ringkasan', $beritum->ringkasan) }}</textarea>
+            @error('ringkasan')
+                <p class="text-xs mt-1.5" style="color: var(--dp-danger);">{{ $message }}</p>
+            @enderror
+        </div>
+
+        {{-- Konten --}}
+        <div class="rounded-xl p-5"
+             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+            <label class="block text-xs font-bold uppercase tracking-widest mb-2"
+                   style="color: var(--dp-text-secondary);">Isi Berita</label>
+            <textarea id="konten" name="konten">{{ old('konten', $beritum->konten) }}</textarea>
+            @error('konten')
+                <p class="text-xs mt-1.5" style="color: var(--dp-danger);">{{ $message }}</p>
+            @enderror
+        </div>
+
     </div>
 
-    <form action="{{ route('dashboard.berita.update', $beritum->id) }}" method="POST" enctype="multipart/form-data"
-        class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        @csrf
-        @method('PUT')
+    {{-- ===== RIGHT: Meta ===== --}}
+    <div class="space-y-5">
 
-        <!-- Left Column: Content -->
-        <div class="lg:col-span-2 space-y-6">
+        {{-- Publikasi --}}
+        <div class="rounded-xl p-5"
+             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
+            <h3 class="font-display font-bold text-base mb-4" style="color: var(--dp-text-primary);">Publikasi</h3>
 
-            <!-- Title -->
-            <div
-                class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 space-y-4">
+            <div class="space-y-4 mb-5">
+                {{-- Status --}}
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Judul Berita</label>
-                    <input type="text" name="judul" value="{{ old('judul', $beritum->judul) }}" required
-                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:border-emerald-500 focus:ring-emerald-500/20 transition-all font-display font-bold text-lg">
-                    @error('judul')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-1.5"
+                           style="color: var(--dp-text-secondary);">Status</label>
+                    <select name="status"
+                            class="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                            style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+                        <option value="draft"     {{ old('status', $beritum->status) === 'draft'     ? 'selected' : '' }}>Draft (Simpan Dulu)</option>
+                        <option value="published" {{ old('status', $beritum->status) === 'published' ? 'selected' : '' }}>Published (Tayang)</option>
+                        <option value="archived"  {{ old('status', $beritum->status) === 'archived'  ? 'selected' : '' }}>Archived (Arsip)</option>
+                    </select>
+                </div>
+
+                {{-- Jenis --}}
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-1.5"
+                           style="color: var(--dp-text-secondary);">Jenis Konten</label>
+                    <select name="jenis"
+                            class="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                            style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+                        <option value="berita"     {{ old('jenis', $beritum->jenis) === 'berita'     ? 'selected' : '' }}>Berita</option>
+                        <option value="opini"      {{ old('jenis', $beritum->jenis) === 'opini'      ? 'selected' : '' }}>Opini</option>
+                        <option value="pengumuman" {{ old('jenis', $beritum->jenis) === 'pengumuman' ? 'selected' : '' }}>Pengumuman</option>
+                        <option value="foto"       {{ old('jenis', $beritum->jenis) === 'foto'       ? 'selected' : '' }}>Foto</option>
+                    </select>
+                </div>
+
+                {{-- Kategori --}}
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-widest mb-1.5"
+                           style="color: var(--dp-text-secondary);">Kategori</label>
+                    <select name="kategori_id" id="kategori_select"
+                            class="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                            style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);">
+                        <option value="">-- Pilih Kategori --</option>
+                        @foreach($kategoris as $kategori)
+                            <option value="{{ $kategori->id }}"
+                                    {{ old('kategori_id', $beritum->kategori_berita_id) == $kategori->id ? 'selected' : '' }}>
+                                {{ $kategori->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('kategori_id')
+                        <p class="text-xs mt-1.5" style="color: var(--dp-danger);">{{ $message }}</p>
                     @enderror
                 </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1">Konten Berita</label>
-                    <div
-                        class="border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 overflow-hidden">
-                        <textarea id="konten" name="konten" placeholder="Mulai menulis cerita...">{{ old('konten', $beritum->konten) }}</textarea>
+                {{-- Headline Toggle --}}
+                <label class="flex items-center gap-3 cursor-pointer py-2 px-3 rounded-lg transition-colors"
+                       style="border: 1px solid var(--dp-border-gold); background: var(--dp-gold-tint);">
+                    <input type="hidden" name="is_headline" value="0">
+                    <input type="checkbox" name="is_headline" value="1"
+                           {{ old('is_headline', $beritum->is_headline) ? 'checked' : '' }}
+                           class="w-4 h-4 rounded accent-[#08332c]">
+                    <div>
+                        <div class="text-sm font-semibold" style="color: var(--dp-gold);">★ Headline</div>
+                        <div class="text-[10px]" style="color: var(--dp-text-secondary);">Tampilkan di posisi utama</div>
                     </div>
-                    @error('konten')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
+                </label>
             </div>
 
+            <button type="submit"
+                    class="w-full flex items-center justify-center gap-2 py-3 rounded-lg font-bold text-sm transition-colors"
+                    style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);"
+                    onmouseover="this.style.background='var(--dp-bg-primary-hover)'"
+                    onmouseout="this.style.background='var(--dp-bg-primary)'">
+                <span class="material-symbols-outlined text-lg">save</span>
+                Simpan Perubahan
+            </button>
+
+            {{-- Info tanggal --}}
+            @if($beritum->tgl_publish)
+                <p class="text-[10px] text-center mt-3" style="color: var(--dp-text-secondary);">
+                    Tayang: {{ $beritum->tgl_publish->format('d M Y') }}
+                </p>
+            @endif
         </div>
 
-        <!-- Right Column: Meta -->
-        <div class="space-y-6">
+        {{-- Gambar Unggulan --}}
+        <div class="rounded-xl p-5"
+             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"
+             x-data="imagePreview('{{ $beritum->thumbnail ? asset('storage/' . $beritum->thumbnail) : '' }}')">
+            <h3 class="font-display font-bold text-base mb-3" style="color: var(--dp-text-primary);">Gambar Unggulan</h3>
 
-            <!-- Publish Action -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5">
-                <h3 class="font-bold text-gray-900 dark:text-white mb-4">Publikasi</h3>
+            <div class="relative w-full aspect-video rounded-xl overflow-hidden cursor-pointer group"
+                 style="background: var(--dp-bg-surface-2); border: 2px dashed var(--dp-border-strong);"
+                 onmouseover="this.style.borderColor='var(--dp-gold)'"
+                 onmouseout="this.style.borderColor='var(--dp-border-strong)'">
+                <input type="file" name="thumbnail" accept="image/*"
+                       class="absolute inset-0 z-20 opacity-0 cursor-pointer w-full h-full"
+                       @change="previewImage">
 
-                <div class="space-y-4 mb-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Status</label>
-                        <select name="status"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm">
-                            <option value="published" {{ old('status', $beritum->status) == 'published' ? 'selected' : '' }}>
-                                Published (Tayang)</option>
-                            <option value="draft" {{ old('status', $beritum->status) == 'draft' ? 'selected' : '' }}>Draft
-                                (Simpan Dulu)</option>
-                            <option value="archived" {{ old('status', $beritum->status) == 'archived' ? 'selected' : '' }}>
-                                Archived (Arsip)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kategori</label>
-                        <select name="kategori_id"
-                            class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-sm">
-                            @foreach($kategoris as $kategori)
-                                <option value="{{ $kategori->id }}">{{ $kategori->nama }}</option>
-                            @endforeach
-                        </select>
-                        <!-- Preselect JS Logic if needed, or simple standard Laravel Blade selected attribute logic (which loops are tricky with, but standard option selected works) -->
-                        <script>
-                            document.querySelector('select[name="kategori_id"]').value = "{{ old('kategori_id', $beritum->kategori_id) }}";
-                        </script>
-                    </div>
+                <div class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2"
+                     x-show="!imageUrl">
+                    <span class="material-symbols-outlined text-4xl" style="color: var(--dp-border-strong);">add_photo_alternate</span>
+                    <span class="text-xs font-medium" style="color: var(--dp-text-secondary);">Upload Gambar Baru</span>
                 </div>
 
-                <button type="submit"
-                    class="w-full flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition-all">
-                    <span class="material-symbols-outlined">save</span>
-                    Simpan Perubahan
-                </button>
-            </div>
+                <img :src="imageUrl" class="absolute inset-0 w-full h-full object-cover z-10"
+                     x-show="imageUrl">
 
-            <!-- Thumbnail Image -->
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5"
-                x-data="imagePreview()">
-                <h3 class="font-bold text-gray-900 dark:text-white mb-4">Gambar Unggulan</h3>
-
-                <div
-                    class="relative w-full aspect-video bg-gray-100 dark:bg-gray-900 rounded-xl overflow-hidden border-2 border-dashed border-gray-300 dark:border-gray-700 hover:border-emerald-500 transition-colors cursor-pointer group">
-                    <input type="file" name="thumbnail" accept="image/*"
-                        class="absolute inset-0 z-20 opacity-0 cursor-pointer" @change="previewImage">
-
-                    <!-- Placeholder (Show if NO image URL) -->
-                    <div class="absolute inset-0 z-10 flex flex-col items-center justify-center text-gray-400 group-hover:text-emerald-500 transition-colors"
-                        x-show="!imageUrl">
-                        <span class="material-symbols-outlined text-4xl mb-2">add_photo_alternate</span>
-                        <span class="text-xs font-medium">Upload New</span>
-                    </div>
-
-                    <!-- Preview (Show if image URL exists) -->
-                    <img :src="imageUrl" class="absolute inset-0 w-full h-full object-cover z-10" x-show="imageUrl">
-
-                    <!-- Overlay -->
-                    <div class="absolute inset-0 z-20 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                        x-show="imageUrl">
-                        <span class="text-white text-xs font-bold">Ganti Gambar</span>
-                    </div>
+                <div class="absolute inset-0 z-20 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                     x-show="imageUrl">
+                    <span class="text-white text-xs font-bold">Ganti Gambar</span>
                 </div>
-                @error('thumbnail')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-
             </div>
-
+            @error('thumbnail')
+                <p class="text-xs mt-1.5" style="color: var(--dp-danger);">{{ $message }}</p>
+            @enderror
         </div>
-    </form>
 
-    <script>
-        function imagePreview() {
-            return {
-                imageUrl: "{{ $beritum->thumbnail ? asset('storage/' . $beritum->thumbnail) : '' }}",
-                previewImage(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        this.imageUrl = URL.createObjectURL(file);
-                    }
+        {{-- Tags --}}
+        <div class="rounded-xl p-5"
+             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"
+             x-data="tagInput('{{ $existingTags }}')">
+
+            <h3 class="font-display font-bold text-base mb-1" style="color: var(--dp-text-primary);">Tags</h3>
+            <p class="text-[10px] mb-3" style="color: var(--dp-text-secondary);">Pilih atau ketik tag baru, pisahkan dengan koma</p>
+
+            @if($allTags->isNotEmpty())
+                <div class="flex flex-wrap gap-1.5 mb-3">
+                    @foreach($allTags as $tag)
+                        <button type="button"
+                                @click="toggleTag('{{ $tag->nama }}')"
+                                :class="isSelected('{{ $tag->nama }}') ? 'tag-active' : 'tag-idle'"
+                                class="px-2.5 py-1 rounded text-[11px] font-semibold transition-colors tag-chip">
+                            #{{ $tag->nama }}
+                        </button>
+                    @endforeach
+                </div>
+            @endif
+
+            <input type="text"
+                   placeholder="Ketik tag baru, enter untuk tambah..."
+                   class="w-full px-3 py-2 rounded-lg text-sm outline-none mb-3"
+                   style="background: var(--dp-bg-surface-2); border: 1px solid var(--dp-border); color: var(--dp-text-primary);"
+                   onfocus="this.style.borderColor='var(--dp-gold)'"
+                   onblur="this.style.borderColor='var(--dp-border)'"
+                   @keydown.enter.prevent="addTag($event.target.value); $event.target.value = ''"
+                   @keydown.comma.prevent="addTag($event.target.value); $event.target.value = ''">
+
+            <div class="flex flex-wrap gap-1.5" x-show="selectedTags.length > 0">
+                <template x-for="t in selectedTags" :key="t">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold"
+                          style="background: var(--dp-gold-tint); color: var(--dp-gold);">
+                        <span x-text="'#' + t"></span>
+                        <button type="button" @click="removeTag(t)"
+                                class="hover:opacity-70 transition-opacity leading-none">×</button>
+                    </span>
+                </template>
+            </div>
+
+            <input type="hidden" name="tags_input" :value="selectedTags.join(',')">
+        </div>
+
+    </div>
+</form>
+
+<style>
+    .tag-chip.tag-active {
+        background: var(--dp-bg-primary);
+        color: var(--dp-gold);
+    }
+    .tag-chip.tag-idle {
+        background: var(--dp-bg-surface-2);
+        color: var(--dp-text-secondary);
+        border: 1px solid var(--dp-border);
+    }
+    .tag-chip.tag-idle:hover {
+        border-color: var(--dp-gold);
+        color: var(--dp-gold);
+    }
+</style>
+
+<script>
+    function imagePreview(initial) {
+        return {
+            imageUrl: initial || null,
+            previewImage(event) {
+                const file = event.target.files[0];
+                if (file) this.imageUrl = URL.createObjectURL(file);
+            }
+        };
+    }
+
+    function tagInput(initial) {
+        return {
+            selectedTags: initial ? initial.split(',').map(t => t.trim()).filter(t => t) : [],
+            isSelected(name) { return this.selectedTags.includes(name); },
+            toggleTag(name) {
+                if (this.isSelected(name)) {
+                    this.removeTag(name);
+                } else {
+                    this.addTag(name);
                 }
-            }
-        }
-
-        tinymce.init({
-            selector: '#konten',
-            plugins: 'image link media autolink lists code table wordcount directionality advlist',
-            toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | image link media | code',
-            image_advtab: true,
-            automatic_uploads: true,
-            images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.withCredentials = false;
-                xhr.open('POST', '{{ route("dashboard.berita.upload_image", [], false) }}');
-                xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
-
-                xhr.upload.onprogress = (e) => {
-                    progress(e.loaded / e.total * 100);
-                };
-
-                xhr.onload = () => {
-                    if (xhr.status === 403) {
-                        reject({ message: 'HTTP Error: ' + xhr.status, remove: true });
-                        return;
-                    }
-                    if (xhr.status < 200 || xhr.status >= 300) {
-                        reject('HTTP Error: ' + xhr.status);
-                        return;
-                    }
-                    const json = JSON.parse(xhr.responseText);
-                    if (!json || typeof json.location != 'string') {
-                        reject('Invalid JSON: ' + xhr.responseText);
-                        return;
-                    }
-                    resolve(json.location);
-                };
-
-                xhr.onerror = () => {
-                    reject('Image upload failed. Code: ' + xhr.status);
-                };
-
-                const formData = new FormData();
-                formData.append('file', blobInfo.blob(), blobInfo.filename());
-                xhr.send(formData);
-            }),
-            file_picker_types: 'image',
-            file_picker_callback: function (cb, value, meta) {
-                var input = document.createElement('input');
-                input.setAttribute('type', 'file');
-                input.setAttribute('accept', 'image/*');
-
-                input.onchange = function () {
-                    var file = this.files[0];
-                    var reader = new FileReader();
-
-                    reader.onload = function () {
-                        var id = 'blobid' + (new Date()).getTime();
-                        var blobCache =  tinymce.activeEditor.editorUpload.blobCache;
-                        var base64 = reader.result.split(',')[1];
-                        var blobInfo = blobCache.create(id, file, base64);
-                        blobCache.add(blobInfo);
-
-                        cb(blobInfo.blobUri(), { title: file.name });
-                    };
-                    reader.readAsDataURL(file);
-                };
-
-                input.click();
             },
-            min_height: 400,
-            promotion: false,
-            skin: document.documentElement.classList.contains('dark') ? 'oxide-dark' : 'oxide',
-            content_css: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
-            setup: function (editor) {
-                editor.on('change', function () {
-                    tinymce.triggerSave();
-                });
+            addTag(name) {
+                name = name.trim();
+                if (name && !this.isSelected(name)) {
+                    this.selectedTags.push(name);
+                }
+            },
+            removeTag(name) {
+                this.selectedTags = this.selectedTags.filter(t => t !== name);
             }
-        });
-    </script>
+        };
+    }
+
+    tinymce.init({
+        selector: '#konten',
+        plugins: 'image link media autolink lists code table wordcount directionality advlist',
+        toolbar: 'undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | image link media | code',
+        image_advtab: true,
+        automatic_uploads: true,
+        images_upload_handler: (blobInfo, progress) => new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.withCredentials = false;
+            xhr.open('POST', '{{ route("dashboard.berita.upload_image", [], false) }}');
+            xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+            xhr.upload.onprogress = (e) => { progress(e.loaded / e.total * 100); };
+            xhr.onload = () => {
+                if (xhr.status === 403) { reject({ message: 'HTTP Error: ' + xhr.status, remove: true }); return; }
+                if (xhr.status < 200 || xhr.status >= 300) { reject('HTTP Error: ' + xhr.status); return; }
+                const json = JSON.parse(xhr.responseText);
+                if (!json || typeof json.location != 'string') { reject('Invalid JSON: ' + xhr.responseText); return; }
+                resolve(json.location);
+            };
+            xhr.onerror = () => { reject('Image upload failed. Code: ' + xhr.status); };
+            const formData = new FormData();
+            formData.append('file', blobInfo.blob(), blobInfo.filename());
+            xhr.send(formData);
+        }),
+        min_height: 450,
+        promotion: false,
+        skin: document.documentElement.classList.contains('dark') ? 'oxide-dark' : 'oxide',
+        content_css: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
+        setup: function (editor) {
+            editor.on('change', function () { tinymce.triggerSave(); });
+        }
+    });
+</script>
+
 @endsection
