@@ -7,6 +7,17 @@
     <title>Portal Berita - PC IPNU IPPNU Kediri</title>
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
 
+    <!-- Meta Description & Canonical -->
+    <meta name="description" content="Portal berita terkini dari PC IPNU-IPPNU Kabupaten Kediri — organisasi, kaderisasi, kegiatan, dan informasi pelajar.">
+    <link rel="canonical" href="{{ url()->current() }}">
+
+    <!-- OG Tags -->
+    <meta property="og:title" content="Portal Berita | {{ $pengaturan->nama_website ?? 'PC IPNU IPPNU Kediri' }}">
+    <meta property="og:description" content="Portal berita terkini dari PC IPNU-IPPNU Kabupaten Kediri.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="{{ $pengaturan->nama_website ?? 'PC IPNU IPPNU Kediri' }}">
+
     <!-- Fonts -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700;900&display=swap"
@@ -100,7 +111,8 @@
                                 <div class="swiper-slide relative w-full h-full">
                                     <img src="{{ asset('storage/' . $slider->gambar_path) }}"
                                         class="w-full h-full object-cover"
-                                        alt="{{ $slider->judul_utama }}">
+                                        alt="{{ $slider->judul_utama }}"
+                                        loading="lazy">
                                     {{-- NO overlay -- user explicitly said no overlay for ad visibility --}}
                                 </div>
                             @endforeach
@@ -134,7 +146,8 @@
                         <div class="aspect-[4/3] md:aspect-auto md:h-full">
                             <img src="{{ $main->thumbnail ? asset('storage/' . $main->thumbnail) : 'https://placehold.co/800x600/08332c/ba9e6f?text=DASI+Pelajar' }}"
                                 alt="{{ $main->judul }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                fetchpriority="high">
                         </div>
                         <div class="absolute bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                             <span class="inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded mb-2"
@@ -159,7 +172,8 @@
                         <div class="aspect-[16/10]">
                             <img src="{{ $item->thumbnail ? asset('storage/' . $item->thumbnail) : 'https://placehold.co/600x400/08332c/ba9e6f?text=DASI+Pelajar' }}"
                                 alt="{{ $item->judul }}"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                loading="lazy">
                         </div>
                         <div class="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
                             <span class="inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded mb-1"
@@ -182,11 +196,11 @@
                 @php $lb = $banners['leaderboard_berita']; @endphp
                 @if($lb->link_url)
                     <a href="{{ $lb->link_url }}" target="_blank" rel="noopener" class="block rounded-lg overflow-hidden max-w-full">
-                        <img src="{{ asset('storage/'.$lb->gambar_path) }}" alt="Banner" class="w-full object-contain" style="max-height: 90px;">
+                        <img src="{{ asset('storage/'.$lb->gambar_path) }}" alt="Banner" class="w-full object-contain" style="max-height: 90px;" loading="lazy">
                     </a>
                 @else
                     <div class="rounded-lg overflow-hidden max-w-full">
-                        <img src="{{ asset('storage/'.$lb->gambar_path) }}" alt="Banner" class="w-full object-contain" style="max-height: 90px;">
+                        <img src="{{ asset('storage/'.$lb->gambar_path) }}" alt="Banner" class="w-full object-contain" style="max-height: 90px;" loading="lazy">
                     </div>
                 @endif
             </section>
@@ -212,7 +226,8 @@
                                 <h2 class="font-display font-bold text-lg md:text-xl" style="color: var(--dp-text-primary);">
                                     {{ $kat->nama }}
                                 </h2>
-                                <a href="#" class="text-sm font-semibold hover:underline"
+                                <a href="{{ route('berita.arsip-kategori', $kat->slug) }}"
+                                    class="text-sm font-semibold hover:underline"
                                     style="color: var(--dp-gold);">
                                     Lihat Semua &rarr;
                                 </a>
@@ -229,7 +244,8 @@
                                     <div class="aspect-[4/3]">
                                         <img src="{{ $first->thumbnail ? asset('storage/' . $first->thumbnail) : 'https://placehold.co/600x450/08332c/ba9e6f?text=' . urlencode($kat->nama) }}"
                                             alt="{{ $first->judul }}"
-                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            loading="lazy">
                                     </div>
                                     <div class="p-4" style="background: var(--dp-bg-surface);">
                                         <span class="inline-block px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest rounded mb-2"
@@ -259,7 +275,8 @@
                                         <div class="w-28 h-20 md:w-32 md:h-24 rounded-md overflow-hidden shrink-0">
                                             <img src="{{ $item->thumbnail ? asset('storage/' . $item->thumbnail) : 'https://placehold.co/320x240/08332c/ba9e6f?text=' . urlencode($kat->nama) }}"
                                                 alt="{{ $item->judul }}"
-                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                loading="lazy">
                                         </div>
                                         <div class="flex-1 min-w-0 flex flex-col justify-center">
                                             <span class="text-[9px] font-bold uppercase tracking-widest mb-1"
@@ -287,11 +304,11 @@
                             @php $bc = $banners['between_categories']; @endphp
                             @if($bc->link_url)
                                 <a href="{{ $bc->link_url }}" target="_blank" rel="noopener" class="block rounded-lg overflow-hidden">
-                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full object-cover" style="max-height: 70px;">
+                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full object-cover" style="max-height: 70px;" loading="lazy">
                                 </a>
                             @else
                                 <div class="rounded-lg overflow-hidden">
-                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full object-cover" style="max-height: 70px;">
+                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full object-cover" style="max-height: 70px;" loading="lazy">
                                 </div>
                             @endif
                         </section>
@@ -317,7 +334,8 @@
                                 <div class="aspect-[16/10] overflow-hidden">
                                     <img src="{{ $berita->thumbnail ? asset('storage/' . $berita->thumbnail) : 'https://placehold.co/480x300/08332c/ba9e6f?text=DASI+Pelajar' }}"
                                         alt="{{ $berita->judul }}"
-                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        loading="lazy">
                                 </div>
                                 <div class="p-4">
                                     <div class="flex items-center gap-2 mb-2">
@@ -379,11 +397,11 @@
                     @php $sb = $banners['sidebar_berita']; @endphp
                     @if($sb->link_url)
                         <a href="{{ $sb->link_url }}" target="_blank" rel="noopener" class="block rounded-lg overflow-hidden" style="min-height: 250px;">
-                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full object-cover">
+                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full object-cover" loading="lazy">
                         </a>
                     @else
                         <div class="rounded-lg overflow-hidden" style="min-height: 250px;">
-                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full object-cover">
+                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full object-cover" loading="lazy">
                         </div>
                     @endif
                     @endif
@@ -425,7 +443,7 @@
                         </h3>
                         <div class="space-y-2">
                             @foreach($kategoris as $kat)
-                            <a href="#{{ $kat->slug ?? \Illuminate\Support\Str::slug($kat->nama) }}"
+                            <a href="{{ route('berita.arsip-kategori', $kat->slug ?? \Illuminate\Support\Str::slug($kat->nama)) }}"
                                 class="flex items-center justify-between py-2 px-3 rounded-md text-sm hover:shadow-sm transition-shadow"
                                 style="background: var(--dp-bg-surface-2); color: var(--dp-text-primary);">
                                 <span>{{ $kat->nama }}</span>
@@ -447,10 +465,11 @@
                         </h3>
                         <div class="flex flex-wrap gap-2">
                             @foreach($tags_populer as $tag)
-                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium cursor-pointer hover:shadow-sm transition-shadow"
+                            <a href="{{ route('berita.arsip-tag', $tag->slug) }}"
+                                class="inline-block px-3 py-1 rounded-full text-xs font-medium hover:shadow-sm transition-shadow"
                                 style="background: var(--dp-primary-tint); color: var(--dp-text-primary); border: 1px solid var(--dp-border);">
                                 #{{ $tag->nama }}
-                            </span>
+                            </a>
                             @endforeach
                         </div>
                     </div>

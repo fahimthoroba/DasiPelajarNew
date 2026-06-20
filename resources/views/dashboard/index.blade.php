@@ -107,7 +107,7 @@
 
     {{-- Quick actions --}}
     <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        @if(in_array(Auth::user()->role, ['admin', 'pers']))
+        @if(Auth::user()->role === 'lmb_lpp')
             <a href="{{ route('dashboard.berita.index') }}"
                class="group rounded-xl p-5 flex items-center gap-4 transition-all"
                style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);"

@@ -14,9 +14,13 @@ use App\Http\Controllers\KategoriAdminController;
 use App\Http\Controllers\MediaVisualController;
 use App\Http\Controllers\PengaturanWebAdminController;
 use App\Http\Controllers\LayananController;
+use App\Http\Controllers\Dashboard\KomentarAdminController;
 
 Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/berita', [\App\Http\Controllers\HomeController::class, 'indexBerita'])->name('berita.index');
+// ⚠️ HARUS sebelum /berita/{slug} — agar tidak tertangkap sebagai slug berita
+Route::get('/berita/kategori/{slug}', [\App\Http\Controllers\HomeController::class, 'arsipKategori'])->name('berita.arsip-kategori');
+Route::get('/berita/tag/{slug}', [\App\Http\Controllers\HomeController::class, 'arsipTag'])->name('berita.arsip-tag');
 Route::get('/berita/{slug}', [\App\Http\Controllers\HomeController::class, 'showBerita'])->name('berita.show');
 Route::post('/berita/{slug}/komentar', [\App\Http\Controllers\HomeController::class, 'storeKomentar'])->name('berita.komentar.store');
 Route::get('/struktur-organisasi', [\App\Http\Controllers\HomeController::class, 'struktur'])->name('struktur-organisasi');
@@ -153,6 +157,11 @@ Route::middleware(['auth'])->group(function () {
 
 // Lembaga Pers Modules — eksklusif role lmb_lpp (ADR-011)
 Route::middleware(['auth', 'role:lmb_lpp'])->group(function () {
+    // Komentar moderation — HARUS sebelum resource berita agar tidak tertangkap {beritum}
+    Route::get('dashboard/berita/komentar', [KomentarAdminController::class, 'index'])->name('dashboard.berita.komentar.index');
+    Route::post('dashboard/berita/komentar/{komentar}/approve', [KomentarAdminController::class, 'approve'])->name('dashboard.berita.komentar.approve');
+    Route::post('dashboard/berita/komentar/{komentar}/reject', [KomentarAdminController::class, 'reject'])->name('dashboard.berita.komentar.reject');
+
     Route::post('dashboard/berita/upload-image', [BeritaAdminController::class, 'uploadImage'])->name('dashboard.berita.upload_image');
     Route::resource('dashboard/berita', BeritaAdminController::class, ['as' => 'dashboard']);
     Route::resource('dashboard/kategori', KategoriAdminController::class, ['as' => 'dashboard']);

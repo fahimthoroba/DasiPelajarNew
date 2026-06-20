@@ -132,9 +132,14 @@
                         Lembaga Pers
                     </p>
                     <a href="{{ route('dashboard.berita.index') }}"
-                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.berita.*') ? 'active' : '' }}">
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.berita.*') && !request()->routeIs('dashboard.berita.komentar.*') ? 'active' : '' }}">
                         <span class="material-symbols-outlined text-xl">newspaper</span>
                         <span>Berita</span>
+                    </a>
+                    <a href="{{ route('dashboard.berita.komentar.index') }}"
+                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.berita.komentar.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">chat</span>
+                        <span>Komentar</span>
                         @if($komentarPending > 0)
                         <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#e8463a] rounded-full ml-auto">
                             {{ $komentarPending > 99 ? '99+' : $komentarPending }}

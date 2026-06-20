@@ -14,6 +14,26 @@
     <meta property="og:image" content="{{ asset('storage/' . $berita->thumbnail) }}">
     @endif
 
+    <!-- OG Tags Lengkap -->
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="{{ $pengaturan->nama_website ?? 'PC IPNU IPPNU Kediri' }}">
+    @if($berita->tgl_publish)
+    <meta property="article:published_time" content="{{ $berita->tgl_publish->toIso8601String() }}">
+    @endif
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $berita->judul }}">
+    <meta name="twitter:description" content="{{ $berita->ringkasan_or_excerpt }}">
+    @if($berita->thumbnail)
+    <meta name="twitter:image" content="{{ asset('storage/' . $berita->thumbnail) }}">
+    @endif
+
+    <!-- Meta Description & Canonical -->
+    <meta name="description" content="{{ $berita->ringkasan_or_excerpt }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+
     <!-- Fonts -->
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700;900&display=swap"
@@ -132,7 +152,8 @@
                     <div class="mb-8 rounded-lg overflow-hidden" style="border: 1px solid var(--dp-border);">
                         <img src="{{ asset('storage/' . $berita->thumbnail) }}"
                             alt="{{ $berita->judul }}"
-                            class="w-full object-cover aspect-video">
+                            class="w-full object-cover aspect-video"
+                            fetchpriority="high">
                     </div>
                     @endif
 
@@ -155,10 +176,11 @@
                         style="border-bottom: 1px solid var(--dp-border);">
                         <span class="material-symbols-outlined text-base" style="color: var(--dp-text-secondary);">sell</span>
                         @foreach($berita->tags as $tag)
-                        <span class="inline-block px-3 py-1 rounded-full text-xs font-medium"
+                        <a href="{{ route('berita.arsip-tag', $tag->slug) }}"
+                            class="inline-block px-3 py-1 rounded-full text-xs font-medium hover:shadow-sm transition-shadow"
                             style="background: var(--dp-primary-tint); color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
                             #{{ $tag->nama }}
-                        </span>
+                        </a>
                         @endforeach
                     </div>
                     @endif
@@ -370,7 +392,8 @@
                                 <div class="aspect-[16/10] overflow-hidden">
                                     <img src="{{ $rekom->thumbnail ? asset('storage/' . $rekom->thumbnail) : 'https://placehold.co/480x300/08332c/ba9e6f?text=DASI+Pelajar' }}"
                                         alt="{{ $rekom->judul }}"
-                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        loading="lazy">
                                 </div>
                                 <div class="p-4">
                                     <div class="flex items-center gap-2 mb-2">
@@ -424,7 +447,8 @@
                                     <div class="w-20 h-16 rounded-md overflow-hidden shrink-0">
                                         <img src="{{ $item->thumbnail ? asset('storage/' . $item->thumbnail) : 'https://placehold.co/160x120/08332c/ba9e6f?text=DP' }}"
                                             alt="{{ $item->judul }}"
-                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                            loading="lazy">
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-sm font-semibold leading-tight line-clamp-2 group-hover:underline"
@@ -458,10 +482,11 @@
                             </h3>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($berita->tags as $tag)
-                                <span class="inline-block px-3 py-1 rounded-full text-xs font-medium"
+                                <a href="{{ route('berita.arsip-tag', $tag->slug) }}"
+                                    class="inline-block px-3 py-1 rounded-full text-xs font-medium hover:shadow-sm transition-shadow"
                                     style="background: var(--dp-primary-tint); color: var(--dp-text-secondary); border: 1px solid var(--dp-border);">
                                     #{{ $tag->nama }}
-                                </span>
+                                </a>
                                 @endforeach
                             </div>
                         </div>

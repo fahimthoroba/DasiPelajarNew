@@ -249,6 +249,45 @@ class HomeController extends Controller
         ));
     }
 
+    public function arsipTag(string $slug)
+    {
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
+
+        $tag = Tag::where('slug', $slug)->firstOrFail();
+
+        $beritas = $tag->beritas()
+            ->published()
+            ->with('kategori', 'tags')
+            ->latest('tgl_publish')
+            ->paginate(12);
+
+        $tags_populer = Tag::withCount('beritas')
+            ->orderByDesc('beritas_count')
+            ->limit(20)
+            ->get();
+
+        return view('berita.arsip-tag', compact('pengaturan', 'tag', 'beritas', 'tags_populer'));
+    }
+
+    public function arsipKategori(string $slug)
+    {
+        $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
+
+        $kategori = KategoriBerita::where('slug', $slug)->firstOrFail();
+
+        $beritas = Berita::where('kategori_berita_id', $kategori->id)
+            ->published()
+            ->with('kategori')
+            ->latest('tgl_publish')
+            ->paginate(12);
+
+        $kategoris = KategoriBerita::withCount(['beritas' => fn($q) => $q->published()])
+            ->having('beritas_count', '>', 0)
+            ->get();
+
+        return view('berita.arsip-kategori', compact('pengaturan', 'kategori', 'beritas', 'kategoris'));
+    }
+
     public function struktur(Request $request)
     {
         $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
