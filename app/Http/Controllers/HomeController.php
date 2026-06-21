@@ -226,9 +226,14 @@ class HomeController extends Controller
             ->limit(5)
             ->get();
 
-        // Semua berita paginated (bagian bawah)
+        // Semua berita paginated (bagian bawah) — filter search ?q=
+        $search = $request->get('q');
         $semua_berita = Berita::published()
             ->with('kategori', 'tags')
+            ->when($search, fn($q) => $q->where(function ($query) use ($search) {
+                $query->where('judul', 'LIKE', "%{$search}%")
+                    ->orWhere('ringkasan', 'LIKE', "%{$search}%");
+            }))
             ->latest('tgl_publish')
             ->paginate(12);
 
@@ -245,7 +250,7 @@ class HomeController extends Controller
             'pengaturan', 'sliders', 'headline',
             'kategoris', 'berita_per_kategori',
             'berita_populer', 'berita_terbaru',
-            'semua_berita', 'tags_populer', 'banners'
+            'semua_berita', 'tags_populer', 'banners', 'search'
         ));
     }
 
@@ -384,10 +389,20 @@ class HomeController extends Controller
         return view('profil.index', compact('pengaturan'));
     }
 
-    public function agenda()
+    public function agenda(Request $request)
     {
         $pengaturan = Cache::remember('pengaturan_web', 3600, fn() => PengaturanWeb::first());
-        $agendas = ProgramKerja::orderBy('tgl_pelaksanaan', 'desc')->get();
-        return view('agenda.index', compact('pengaturan', 'agendas'));
+
+        $query = ProgramKerja::with('departemen')->orderBy('tgl_pelaksanaan', 'desc');
+
+        if ($request->filled('departemen')) {
+            $query->where('departemen_id', $request->departemen);
+        }
+
+        $agendas = $query->get();
+
+        $departemens = \App\Models\Departemen::orderBy('nama_departemen')->get(['id', 'nama_departemen']);
+
+        return view('agenda.index', compact('pengaturan', 'agendas', 'departemens'));
     }
 }

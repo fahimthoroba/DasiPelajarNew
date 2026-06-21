@@ -79,7 +79,7 @@
             <div class="flex flex-col lg:flex-row gap-8">
 
                 {{-- Timeline cards --}}
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0" x-data="{ filterStatus: 'semua' }">
                     <div class="flex items-center justify-between mb-6"
                         style="border-top: 3px solid var(--dp-bg-primary); padding-top: 0.75rem;">
                         <h2 class="font-display font-bold text-xl" style="color: var(--dp-text-primary);">
@@ -88,6 +88,37 @@
                         <span class="text-sm" style="color: var(--dp-text-secondary);">
                             {{ $agendas->count() }} program
                         </span>
+                    </div>
+
+                    {{-- Filter Bar --}}
+                    <div class="mb-6 flex flex-wrap gap-3 items-center">
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-sm font-semibold mr-1" style="color: var(--dp-text-secondary);">Status:</span>
+                            @foreach(['semua' => 'Semua', 'upcoming' => 'Akan Datang', 'done' => 'Terlaksana', 'pending' => 'Menunggu LPJ'] as $val => $label)
+                            <button type="button" @click="filterStatus = '{{ $val }}'"
+                                    :class="filterStatus === '{{ $val }}' ? 'font-bold' : 'opacity-60'"
+                                    class="text-xs px-3 py-1 rounded-full border transition-opacity"
+                                    style="border-color: var(--dp-bg-primary); color: var(--dp-bg-primary);">
+                                {{ $label }}
+                            </button>
+                            @endforeach
+                        </div>
+
+                        <form method="GET" action="{{ route('agenda') }}" class="flex items-center gap-2">
+                            <select name="departemen" onchange="this.form.submit()"
+                                    class="text-xs rounded px-3 py-1.5"
+                                    style="border: 1px solid var(--dp-border-strong); background: var(--dp-bg-surface); color: var(--dp-text-primary);">
+                                <option value="">Semua Departemen</option>
+                                @foreach($departemens as $dept)
+                                <option value="{{ $dept->id }}" {{ request('departemen') == $dept->id ? 'selected' : '' }}>
+                                    {{ $dept->nama_departemen }}
+                                </option>
+                                @endforeach
+                            </select>
+                            @if(request('departemen'))
+                            <a href="{{ route('agenda') }}" class="text-xs font-semibold" style="color: var(--dp-danger);">✕ Reset</a>
+                            @endif
+                        </form>
                     </div>
 
                     @forelse($agendas as $agenda)
@@ -100,25 +131,30 @@
                                 $statusColor = 'var(--dp-status-done)';
                                 $statusBg = 'var(--dp-primary-tint)';
                                 $icon = 'check_circle';
+                                $alpineStatus = 'done';
                             } elseif ($tgl->equalTo($now)) {
                                 $statusLabel = 'Hari Ini';
                                 $statusColor = 'var(--dp-gold)';
                                 $statusBg = 'var(--dp-gold-tint)';
                                 $icon = 'play_circle';
+                                $alpineStatus = 'upcoming';
                             } elseif ($tgl->gt($now)) {
                                 $statusLabel = 'Akan Datang';
                                 $statusColor = 'var(--dp-gold)';
                                 $statusBg = 'var(--dp-gold-tint)';
                                 $icon = 'schedule';
+                                $alpineStatus = 'upcoming';
                             } else {
                                 $statusLabel = 'Menunggu LPJ';
                                 $statusColor = 'var(--dp-danger)';
                                 $statusBg = 'var(--dp-danger-tint)';
                                 $icon = 'pending';
+                                $alpineStatus = 'pending';
                             }
                         @endphp
 
-                        <div class="rounded-lg p-5 mb-4 transition-shadow hover:shadow-md"
+                        <div x-show="filterStatus === 'semua' || filterStatus === '{{ $alpineStatus }}'"
+                            class="rounded-lg p-5 mb-4 transition-shadow hover:shadow-md"
                             style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
                             <div class="flex flex-col sm:flex-row sm:items-start gap-4">
                                 {{-- Date block --}}
@@ -182,6 +218,24 @@
                             <p class="text-sm" style="color: var(--dp-text-secondary);">Data program kerja belum tersedia.</p>
                         </div>
                     @endforelse
+
+                    @if($agendas->count())
+                    <div x-show="filterStatus !== 'semua' && {{ $agendas->count() }} > 0 &&
+                                 ![@foreach($agendas as $a)
+                                    @php
+                                        $t = \Carbon\Carbon::parse($a->tgl_pelaksanaan)->startOfDay();
+                                        $n = now()->startOfDay();
+                                        $as = $a->status_lpj === 'Terverifikasi' ? 'done' : ($t->gte($n) ? 'upcoming' : 'pending');
+                                    @endphp
+                                    '{{ $as }}',
+                                 @endforeach].includes(filterStatus)"
+                        class="text-center py-16 rounded-lg"
+                        style="background: var(--dp-bg-surface); border: 1px dashed var(--dp-border-strong);">
+                        <span class="material-symbols-outlined text-4xl mb-3 block" style="color: var(--dp-text-secondary);">filter_alt_off</span>
+                        <h3 class="font-display font-bold text-lg mb-1" style="color: var(--dp-text-primary);">Tidak Ada Agenda Ditemukan</h3>
+                        <p class="text-sm" style="color: var(--dp-text-secondary);">Coba ubah filter status untuk melihat agenda lainnya.</p>
+                    </div>
+                    @endif
                 </div>
 
                 {{-- Sidebar --}}

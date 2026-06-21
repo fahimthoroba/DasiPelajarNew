@@ -1,48 +1,40 @@
 # CONTEXT — DASI Pelajar
-_Updated: 2026-06-16 oleh Claudian_
+_Updated: 2026-06-20 oleh Claudian_
 
 ---
 
 ## Task Aktif
 
-**Task:** task-011 — Tag Clickable + Halaman Arsip per Tag
+**Task:** task-015 → task-016 → task-017 — Production Deployment
 
-**Brief:**
-- Apa: Ubah tag `<span>` → `<a>` di berita/show + index, buat route `/berita/tag/{slug}`, build view arsip-tag
-- Scope: 1 controller method, 1 route, 1 view baru, edit 2 view existing
-- ⚠️ Route `/berita/tag/{slug}` HARUS sebelum `/berita/{slug}` — risk conflict!
-- Spec lengkap: `Brain/30.Projects/DasiPelajar/06-Features/tasks/task-011-tag-clickable-dan-arsip-tag.md`
+**Urutan eksekusi:**
+1. **task-015** — Setup Cloudflare (MANUAL di browser, tidak perlu Claude Code)
+2. **task-016** — Docker setup di server + buat file Dockerfile/nginx.conf/docker-compose.prod.yml → **SONNET**
+3. **task-017** — Build + migrate + go-live verification → **HAIKU**
 
-## Recommended Model
-**→ SONNET**
+**Deployment guide lengkap:** `Brain/30.Projects/DasiPelajar/15-Deployment-Guide.md`
 
 ---
 
-## Status Terakhir
-- Task-010 (Arsip kategori berita) ✅ selesai — arsipKategori() method, route, view, fix "Lihat Semua →" di index + sidebar
-- Task-001 s/d Task-009 ✅ semua selesai
+## Stack Production
+- Docker Compose: Nginx + PHP-FPM 8.3 + MariaDB 10.11 + Cloudflared
+- Redis + MinIO: commented out di compose, aktifkan Phase 2 nanti
+- SSL: Cloudflare (mode Full)
+- Tunnel: Cloudflare Tunnel (tidak perlu buka port 80/443 di router)
 
 ---
 
-## Investigasi WAJIB Sebelum Code
-```bash
-# Cek relasi Tag di Berita model
-grep -n "tags\|belongsToMany\|berita_tag" app/Models/Berita.php
-
-# Cek apakah Tag model sudah punya slug
-grep -n "slug\|fillable" app/Models/Tag.php
-```
+## Yang Perlu Disiapkan Dulu (Sebelum task-016)
+1. ✅ Domain sudah dibeli
+2. [ ] Pindah nameserver ke Cloudflare (task-015)
+3. [ ] Buat Cloudflare Tunnel → dapat TUNNEL_TOKEN (task-015)
+4. [ ] SSH access ke server sudah bisa dari mesin lokal
 
 ---
 
-## Jangan Lupa
-- View standalone HTML (tidak extend layout) — konsisten dengan berita/show dan index
-- Gunakan CSS variables `var(--dp-*)` — jangan hardcode warna
-- Route `/berita/tag/{slug}` HARUS sebelum `/berita/{slug}` di routes/web.php
-- Tag findBySlug: `Tag::where('slug', $slug)->firstOrFail()`
-- Append hasil ke `14-Debug-Log.md` + update `12-Status.md`
-
----
-
-## Next Action
-Execute task-011 dengan Sonnet model. Investigasi Tag model dulu, lalu buat arsipTag() method, route, view, dan ubah span→a di show + index.
+## Constraints Aktif
+- JANGAN buka port 80/443 di router — traffic lewat Cloudflare Tunnel
+- DB_HOST di .env production = `mariadb` (nama service Docker), BUKAN `localhost`
+- FILESYSTEM_DISK=public (local storage) — MinIO belum aktif
+- APP_DEBUG=false di production — wajib
+- ⚠️ Ubuntu 25.10 support berakhir Juli 2026 — plan upgrade ke 26.04 LTS setelah deploy stabil

@@ -166,12 +166,12 @@
             {{-- TABS --}}
             <div class="inline-flex p-1 rounded-full shadow-md" style="background: var(--dp-bg-surface); border: 1px solid var(--dp-border);">
                 <a href="?tab=ipnu"
-                   class="px-8 py-2 rounded-full text-sm font-bold transition-all"
+                   class="px-8 py-3 min-h-[44px] flex items-center rounded-full text-sm font-bold transition-all"
                    style="{{ $tab === 'ipnu' ? 'background: var(--dp-bg-primary); color: var(--dp-text-on-primary); box-shadow: 0 0 0 1.5px var(--dp-gold);' : 'color: var(--dp-text-secondary);' }}">
                    PC IPNU
                 </a>
                 <a href="?tab=ippnu"
-                   class="px-8 py-2 rounded-full text-sm font-bold transition-all"
+                   class="px-8 py-3 min-h-[44px] flex items-center rounded-full text-sm font-bold transition-all"
                    style="{{ $tab === 'ippnu' ? 'background: var(--dp-gold); color: #08332c;' : 'color: var(--dp-text-secondary);' }}">
                    PC IPPNU
                 </a>

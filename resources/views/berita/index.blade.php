@@ -326,6 +326,21 @@
                             </h2>
                         </div>
 
+                        @if(isset($search) && $search)
+                        <div class="mb-4">
+                            <p class="text-sm" style="color: var(--dp-text-secondary);">
+                                Hasil pencarian untuk:
+                                <span class="font-semibold" style="color: var(--dp-text-primary);">"{{ $search }}"</span>
+                                — {{ $semua_berita->total() }} artikel ditemukan
+                            </p>
+                            <a href="{{ route('berita.index') }}"
+                               class="text-xs hover:underline"
+                               style="color: var(--dp-text-secondary);">
+                                ✕ Hapus pencarian
+                            </a>
+                        </div>
+                        @endif
+
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             @forelse($semua_berita as $berita)
                             <a href="{{ route('berita.show', $berita->slug) }}"
@@ -360,8 +375,18 @@
                             <div class="col-span-full text-center py-16 rounded-lg"
                                 style="background: var(--dp-bg-surface); border: 1px dashed var(--dp-border-strong);">
                                 <span class="material-symbols-outlined text-4xl mb-3 block" style="color: var(--dp-text-secondary);">newspaper</span>
+                                @if(isset($search) && $search)
+                                <h3 class="font-display font-bold text-lg mb-1" style="color: var(--dp-text-primary);">Tidak ada hasil untuk "{{ $search }}"</h3>
+                                <p class="text-sm" style="color: var(--dp-text-secondary);">Coba kata kunci lain, atau periksa ejaan.</p>
+                                <a href="{{ route('berita.index') }}"
+                                   class="inline-block mt-4 px-5 py-2 rounded font-semibold text-sm"
+                                   style="background: var(--dp-bg-primary); color: var(--dp-text-on-primary);">
+                                    Lihat Semua Berita
+                                </a>
+                                @else
                                 <h3 class="font-display font-bold text-lg mb-1" style="color: var(--dp-text-primary);">Belum Ada Berita</h3>
                                 <p class="text-sm" style="color: var(--dp-text-secondary);">Nantikan informasi terbaru dari kami.</p>
+                                @endif
                             </div>
                             @endforelse
                         </div>
