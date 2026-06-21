@@ -1,0 +1,42 @@
+name: dasipelajarnew
+
+services:
+  php-fpm:
+    build:
+      context: .
+      target: php-fpm
+    container_name: dasipelajarnew_php-fpm
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - public_data:/var/www/html/public
+      - storage_data:/var/www/html/storage
+    networks:
+      - internal
+      - mariadb_default
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: dasipelajarnew_nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - public_data:/var/www/html/public:ro
+      - storage_data:/var/www/html/storage:ro
+    depends_on:
+      - php-fpm
+    networks:
+      - internal
+      - npm_shared_net
+
+networks:
+  internal:
+    driver: bridge
+  mariadb_default:
+    external: true
+  npm_shared_net:
+    external: true
+
+volumes:
+  public_data:
+  storage_data:

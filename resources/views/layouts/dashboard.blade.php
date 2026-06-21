@@ -393,7 +393,7 @@
                                     {{ Auth::user()->email }}
                                 </div>
                             </div>
-                            <a href="#" class="block px-4 py-2.5 text-sm transition-colors"
+                            <a href="{{ route('dashboard.profile.edit') }}" class="block px-4 py-2.5 text-sm transition-colors"
                                 style="color: var(--dp-text-secondary);"
                                 onmouseover="this.style.background='var(--dp-primary-tint)'"
                                 onmouseout="this.style.background='transparent'">

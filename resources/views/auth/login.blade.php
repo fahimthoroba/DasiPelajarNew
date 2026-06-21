@@ -239,6 +239,9 @@
                                        style="accent-color: #08332c;">
                                 <span class="text-sm" style="color: var(--dp-text-secondary);">Ingat Saya</span>
                             </label>
+                            <a href="{{ route('password.request') }}" class="text-sm font-semibold transition-colors" style="color: var(--dp-gold);">
+                                Lupa password?
+                            </a>
                         </div>
 
                         {{-- Submit --}}

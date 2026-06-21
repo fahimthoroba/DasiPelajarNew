@@ -57,7 +57,7 @@ class ProgramKerjaController extends Controller
 
     public function show($id)
     {
-        $proker = ProgramKerja::with(['departemen', 'kepanitiaans.kader', 'absensis'])->findOrFail($id);
+        $proker = ProgramKerja::with(['departemen', 'kepanitiaans.kader', 'absensis', 'lpjRevisions'])->findOrFail($id);
         return view('dashboard.sekretariat.proker.show', compact('proker'));
     }
 
@@ -69,8 +69,15 @@ class ProgramKerjaController extends Controller
         ]);
 
         $proker = ProgramKerja::findOrFail($id);
+        $latestRevision = $proker->lpjRevisions()->first();
 
         if ($request->action === 'terima') {
+            $latestRevision?->update([
+                'status' => 'diterima',
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(),
+            ]);
+
             $proker->update([
                 'status_pelaksanaan' => 'Selesai',
                 'verified_by' => Auth::id(),
@@ -78,6 +85,13 @@ class ProgramKerjaController extends Controller
             ]);
             return redirect()->route('dashboard.sekretariat.proker.index', ['tab' => 'menunggu_verifikasi'])->with('success', 'LPJ berhasil diverifikasi. Program Kerja Selesai.');
         } else {
+            $latestRevision?->update([
+                'status' => 'ditolak',
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(),
+                'catatan' => $request->lpj_catatan,
+            ]);
+
             // Tolak — reset step & status, kirim catatan
             $proker->update([
                 'current_step'       => 5,

@@ -43,9 +43,18 @@ Route::get('/login', [AuthController::class, 'index'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
 // Dashboard Routes (Protected)
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Profil & Ganti Password
+    Route::get('dashboard/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('dashboard.profile.edit');
+    Route::put('dashboard/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('dashboard.profile.password.update');
 
     // Media Visual (Hero Slider + Banner Iklan) — menggantikan /slider
     Route::get('dashboard/media-visual', [\App\Http\Controllers\MediaVisualController::class, 'index'])->name('dashboard.media-visual.index');

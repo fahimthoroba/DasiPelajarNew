@@ -54,6 +54,19 @@
                     </a>
                 </div>
                 <div class="p-6">
+                    @if($proker->lpjRevisions->count() > 1)
+                    <div class="mb-4 p-4 border rounded" style="border-color: var(--dp-border-strong);">
+                        <p class="font-semibold text-sm mb-2">Riwayat Pengajuan LPJ ({{ $proker->lpjRevisions->count() }}x)</p>
+                        @foreach($proker->lpjRevisions as $rev)
+                        <div class="text-xs mb-1 pb-1 border-b">
+                            Revisi #{{ $rev->revision_number }} —
+                            {{ $rev->status === 'ditolak' ? '❌ Ditolak' : ($rev->status === 'diterima' ? '✅ Diterima' : '⏳ Pending') }}
+                            @if($rev->catatan) — "{{ $rev->catatan }}" @endif
+                            ({{ $rev->submitted_at->format('d M Y H:i') }})
+                        </div>
+                        @endforeach
+                    </div>
+                    @endif
                     <form action="{{ route('dashboard.sekretariat.proker.verifikasi', $proker->id) }}" method="POST">
                         @csrf
                         <div class="mb-6">

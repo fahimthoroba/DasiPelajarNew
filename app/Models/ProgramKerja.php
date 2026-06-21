@@ -59,6 +59,11 @@ class ProgramKerja extends Model
         return $this->belongsTo(User::class, 'verified_by');
     }
 
+    public function lpjRevisions()
+    {
+        return $this->hasMany(LpjRevision::class, 'program_kerja_id')->orderBy('revision_number', 'desc');
+    }
+
     public function formKegiatan()
     {
         return $this->hasOne(\App\Models\FormKegiatan::class, 'program_kerja_id');

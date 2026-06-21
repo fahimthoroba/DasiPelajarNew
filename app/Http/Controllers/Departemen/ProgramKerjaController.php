@@ -237,6 +237,17 @@ class ProgramKerjaController extends Controller
 
         $path = $request->file('lpj_path')->store('lpj', 'public');
 
+        $nextRevision = ($proker->lpjRevisions()->max('revision_number') ?? 0) + 1;
+
+        \App\Models\LpjRevision::create([
+            'program_kerja_id' => $proker->id,
+            'revision_number'  => $nextRevision,
+            'file_path'        => $path,
+            'submitted_by'     => Auth::id(),
+            'submitted_at'     => now(),
+            'status'           => 'pending',
+        ]);
+
         $proker->update([
             'path_lpj' => $path,
             'current_step' => 6 // Menunggu Verifikasi
