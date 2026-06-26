@@ -220,6 +220,11 @@
                             <span class="material-symbols-outlined text-xl">how_to_reg</span>
                             <span>Form Kegiatan</span>
                         </a>
+                        <a href="{{ route('dashboard.sekretariat.surat-keluar.index') }}"
+                           class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.surat-keluar.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">send</span>
+                            <span>Buku Agenda Surat</span>
+                        </a>
                     @endif
                     <a href="{{ in_array(auth()->user()->role, ['pac', 'pr', 'pk']) ? route('dashboard.pac.proker.index') : route('dashboard.admin.proker.index') }}"
                         class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.pac.proker.*') || request()->routeIs('dashboard.admin.proker.*') ? 'active' : '' }}">
@@ -257,6 +262,11 @@
                             <span class="material-symbols-outlined text-xl">how_to_reg</span>
                             <span>Form Kegiatan</span>
                         </a>
+                        <a href="{{ route('dashboard.sekretariat.surat-keluar.index') }}"
+                            class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.surat-keluar.*') ? 'active' : '' }}">
+                            <span class="material-symbols-outlined text-xl">send</span>
+                            <span>Buku Agenda Surat</span>
+                        </a>
                     @endif
                     <a href="{{ route('dashboard.kaderisasi.absensi.index') }}"
                         class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.kaderisasi.absensi.*') ? 'active' : '' }}">
@@ -279,6 +289,11 @@
                        class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.form-kegiatan.*') ? 'active' : '' }}">
                         <span class="material-symbols-outlined text-xl">how_to_reg</span>
                         <span>Form Kegiatan</span>
+                    </a>
+                    <a href="{{ route('dashboard.sekretariat.surat-keluar.index') }}"
+                       class="dash-sidebar-link flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {{ request()->routeIs('dashboard.sekretariat.surat-keluar.*') ? 'active' : '' }}">
+                        <span class="material-symbols-outlined text-xl">send</span>
+                        <span>Buku Agenda Surat</span>
                     </a>
                 @endif
 

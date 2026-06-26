@@ -175,6 +175,7 @@
                     <span class="material-symbols-outlined text-4xl" style="color: var(--dp-border-strong);">add_photo_alternate</span>
                     <span class="text-xs font-medium" style="color: var(--dp-text-secondary);">Upload Thumbnail</span>
                     <span class="text-[10px]" style="color: var(--dp-text-secondary);">Maks 2MB · Rasio 16:9</span>
+                    <span class="text-[10px] text-center px-4" style="color: var(--dp-text-secondary);">Jika berita ini jadi headline utama, tampilan akan sedikit berbeda proporsinya (rasio 4:3, bento grid besar)</span>
                 </div>
 
                 <img :src="imageUrl" class="absolute inset-0 w-full h-full object-cover z-10"

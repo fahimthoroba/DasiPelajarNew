@@ -36,6 +36,24 @@
         class="space-y-6">
         @csrf
 
+        {{-- === KODE SURAT KEPANITIAAN === --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border shadow-sm p-6" style="border-color:var(--dp-border)">
+            <label class="block text-xs font-bold uppercase tracking-wider mb-1.5" style="color:var(--dp-text-secondary)">
+                Kode Surat Kepanitiaan <span style="color:var(--dp-danger)">*</span>
+            </label>
+            <input type="text" name="kode_surat" required
+                value="{{ old('kode_surat', $proker->kode_surat_kepanitiaan) }}"
+                placeholder="Contoh: MAKESTA"
+                class="w-full rounded-lg px-3 py-2.5 text-sm border focus:outline-none transition-all"
+                style="background:var(--dp-bg-surface-2);border-color:var(--dp-border);color:var(--dp-text-primary)">
+            <p class="text-xs mt-1.5" style="color:var(--dp-text-secondary)">
+                Kode singkat untuk nomor surat (tampil sebagai "Pan.{kode}"). Diisi manual, tidak otomatis dari nama program kerja.
+            </p>
+            @error('kode_surat')
+                <p class="text-xs mt-1" style="color:var(--dp-danger)">{{ $message }}</p>
+            @enderror
+        </div>
+
         {{-- === BPH === --}}
         <div class="bg-white dark:bg-gray-800 rounded-2xl border shadow-sm overflow-hidden"
             style="border-color:var(--dp-border)">

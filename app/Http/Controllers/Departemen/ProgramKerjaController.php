@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Departemen;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ProgramKerja;
+use App\Models\ProkerCatatanFile;
 use Illuminate\Support\Facades\Auth;
 
 class ProgramKerjaController extends Controller
@@ -27,7 +28,7 @@ class ProgramKerjaController extends Controller
 
     public function show($id)
     {
-        $proker = ProgramKerja::with(['departemen', 'kepanitiaans', 'absensis', 'formKegiatan'])->findOrFail($id);
+        $proker = ProgramKerja::with(['departemen', 'kepanitiaans', 'absensis', 'formKegiatan', 'penanggungJawabPengurus.kader', 'catatanFiles'])->findOrFail($id);
         return view('dashboard.departemen.proker.show', compact('proker'));
     }
 
@@ -76,7 +77,12 @@ class ProgramKerjaController extends Controller
 
     public function bulkStorePanitia(Request $request, $id)
     {
+        $request->validate([
+            'kode_surat' => 'required|string|max:50',
+        ]);
+
         $proker = ProgramKerja::findOrFail($id);
+        $proker->update(['kode_surat_kepanitiaan' => $request->kode_surat]);
 
         // Hapus semua panitia lama, lalu re-insert
         $proker->kepanitiaans()->delete();
@@ -131,6 +137,23 @@ class ProgramKerjaController extends Controller
             $proker->update(['current_step' => 1, 'status_pelaksanaan' => 'Perencanaan']);
         }
 
+        // Trigger buku agenda surat kepanitiaan — HANYA sekali, saat panitia PERTAMA tersimpan
+        // (!exists() check mencegah re-create/reset counter saat susunan panitia diedit ulang)
+        if (
+            $proker->tipe_pelaksanaan === 'kepanitiaan'
+            && $inserted > 0
+            && !\App\Models\NomorSuratKepanitiaanCounter::where('program_kerja_id', $proker->id)->exists()
+        ) {
+            foreach (['IPNU', 'IPPNU', 'Bersama'] as $jenis) {
+                \App\Models\NomorSuratKepanitiaanCounter::create([
+                    'program_kerja_id' => $proker->id,
+                    'jenis_organisasi' => $jenis,
+                    'nomor_terakhir' => 0,
+                ]);
+            }
+            session()->flash('toast', "Buku agenda surat kepanitiaan untuk \"{$proker->nama_proker}\" telah dibuat.");
+        }
+
         return redirect()->route('dashboard.departemen.proker.panitia', $id)
             ->with('success', 'Susunan panitia berhasil disimpan.');
     }
@@ -164,10 +187,15 @@ class ProgramKerjaController extends Controller
         $request->validate([
             'judul'     => 'required|string',
             'tgl_waktu' => 'required|date',
-            'jenis'     => 'required|in:rapat_panitia,pelaksanaan',
+            'jenis'     => 'required|in:rapat_panitia,pelaksanaan,rapat_rutin',
         ]);
 
         $proker = ProgramKerja::findOrFail($id);
+
+        if ($request->jenis === 'rapat_rutin') {
+            abort_if($proker->tipe_pelaksanaan !== 'penanggung_jawab', 403);
+            // TIDAK ADA gating seperti canCreateNewRapatPanitia() — sesi baru selalu boleh dibuat
+        }
 
         if ($request->jenis === 'rapat_panitia' && !$proker->canCreateNewRapatPanitia()) {
             return back()->with('error', 'Akses ditolak: Semua rapat sebelumnya harus sudah ditutup dan memiliki file notulensi.');
@@ -222,6 +250,40 @@ class ProgramKerjaController extends Controller
         $absensi = \App\Models\Absensi::findOrFail($agendaId);
         $absensi->delete();
         return back()->with('success', 'Agenda dihapus.');
+    }
+
+    // --- Jalur Penanggung Jawab (Tahap 3) ---
+
+    public function tandaiSelesai($id)
+    {
+        $proker = ProgramKerja::findOrFail($id);
+        abort_if($proker->tipe_pelaksanaan !== 'penanggung_jawab', 403);
+
+        $proker->update(['status_pelaksanaan' => 'Selesai']);
+        // TIDAK ada current_step advance ke 6, TIDAK ada verified_by/verified_at — beda total dari jalur kepanitiaan
+
+        return back()->with('success', 'Program kerja ditandai selesai.');
+    }
+
+    public function storeCatatan(Request $request, $id)
+    {
+        $proker = ProgramKerja::findOrFail($id);
+        abort_if($proker->tipe_pelaksanaan !== 'penanggung_jawab', 403);
+
+        $request->validate([
+            'file' => 'required|file|max:5120',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        $path = $request->file('file')->store('proker-catatan', 'public');
+        ProkerCatatanFile::create([
+            'program_kerja_id' => $proker->id,
+            'file_path' => $path,
+            'keterangan' => $request->keterangan,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Catatan/evaluasi berhasil diupload.');
     }
 
     // --- LPJ Upload ---

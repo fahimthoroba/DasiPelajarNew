@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\ProgramKerja;
 use App\Models\Departemen;
+use App\Models\Pengurus;
 use Illuminate\Support\Facades\Auth;
 
 class ProgramKerjaController extends Controller
@@ -30,7 +31,13 @@ class ProgramKerjaController extends Controller
     public function create()
     {
         $departemens = Departemen::all();
-        return view('dashboard.sekretariat.proker.create', compact('departemens'));
+        $pengurusList = Pengurus::with('kader')->where('is_active', true)->get()
+            ->map(fn($p) => [
+                'id' => $p->id,
+                'departemen_id' => $p->departemen_id,
+                'label' => $p->kader->nama_lengkap . ' — ' . $p->jabatan_lengkap,
+            ]);
+        return view('dashboard.sekretariat.proker.create', compact('departemens', 'pengurusList'));
     }
 
     public function store(Request $request)
@@ -40,13 +47,27 @@ class ProgramKerjaController extends Controller
             'departemen_id' => 'required|exists:departemens,id',
             'tgl_pelaksanaan' => 'required|date',
             'penanggung_jawab' => 'nullable',
+            'tipe_pelaksanaan' => 'required|in:kepanitiaan,penanggung_jawab',
+            'penanggung_jawab_pengurus_id' => 'nullable|exists:pengurus,id',
         ]);
+
+        if ($request->tipe_pelaksanaan === 'penanggung_jawab' && $request->penanggung_jawab_pengurus_id) {
+            $pengurus = Pengurus::findOrFail($request->penanggung_jawab_pengurus_id);
+            if ($pengurus->departemen_id !== $request->departemen_id) {
+                return back()->withErrors(['penanggung_jawab_pengurus_id' => 'Pengurus yang dipilih bukan dari departemen ini.'])
+                    ->withInput();
+            }
+        }
 
         ProgramKerja::create([
             'nama_proker' => $request->nama_proker,
             'departemen_id' => $request->departemen_id,
             'tgl_pelaksanaan' => $request->tgl_pelaksanaan,
             'penanggung_jawab' => $request->penanggung_jawab,
+            'tipe_pelaksanaan' => $request->tipe_pelaksanaan,
+            'penanggung_jawab_pengurus_id' => $request->tipe_pelaksanaan === 'penanggung_jawab'
+                ? $request->penanggung_jawab_pengurus_id
+                : null,
             'status_pelaksanaan' => 'Perencanaan',
             'current_step' => 1,
         ]);

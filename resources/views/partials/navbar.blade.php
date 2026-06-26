@@ -29,15 +29,48 @@
                     Berita
                 </a>
 
+                {{-- Dropdown "Tentang" --}}
+                <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @click.outside="open = false">
+                    <button @click="open = !open"
+                        class="{{ request()->routeIs('profil', 'struktur-organisasi') ? 'text-[#ba9e6f] font-bold' : 'text-white/80 font-medium hover:text-[#ba9e6f]' }} transition-colors flex items-center gap-1">
+                        Tentang
+                        <span class="material-symbols-outlined text-base transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+                    </button>
+                    <div x-show="open" x-transition
+                         class="absolute top-full left-0 mt-2 w-56 bg-[#08332c] border border-[#ba9e6f]/30 rounded-xl shadow-xl overflow-hidden"
+                         style="display: none;">
+                        <a href="{{ route('profil') }}"
+                           class="block px-5 py-3 {{ request()->routeIs('profil') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80 hover:bg-white/5' }}">
+                            Profil & Sejarah
+                        </a>
+                        <a href="{{ route('struktur-organisasi') }}"
+                           class="block px-5 py-3 {{ request()->routeIs('struktur-organisasi') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80 hover:bg-white/5' }}">
+                            Struktur Organisasi
+                        </a>
+                    </div>
+                </div>
+
                 <a href="{{ route('agenda') }}"
                     class="{{ request()->routeIs('agenda') ? 'text-[#ba9e6f] font-bold' : 'text-white/80 font-medium hover:text-[#ba9e6f]' }} transition-colors">
                     Program
                 </a>
 
-                <a href="{{ route('layanan') }}"
-                    class="{{ request()->routeIs('layanan') ? 'text-[#ba9e6f] font-bold' : 'text-white/80 font-medium hover:text-[#ba9e6f]' }} transition-colors">
-                    Layanan
-                </a>
+                {{-- Dropdown "Layanan" --}}
+                <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false" @click.outside="open = false">
+                    <button @click="open = !open"
+                        class="{{ request()->routeIs('layanan') ? 'text-[#ba9e6f] font-bold' : 'text-white/80 font-medium hover:text-[#ba9e6f]' }} transition-colors flex items-center gap-1">
+                        Layanan
+                        <span class="material-symbols-outlined text-base transition-transform" :class="open ? 'rotate-180' : ''">expand_more</span>
+                    </button>
+                    <div x-show="open" x-transition
+                         class="absolute top-full left-0 mt-2 w-56 bg-[#08332c] border border-[#ba9e6f]/30 rounded-xl shadow-xl overflow-hidden"
+                         style="display: none;">
+                        <a href="{{ route('layanan') }}"
+                           class="block px-5 py-3 {{ request()->routeIs('layanan') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80 hover:bg-white/5' }}">
+                            Download Center
+                        </a>
+                    </div>
+                </div>
             </div>
 
             <!-- CTA & Theme Toggle -->
@@ -75,14 +108,36 @@
             class="block px-4 py-3 rounded-xl {{ request()->routeIs('berita.*') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80 hover:bg-white/5' }}">
             Berita
         </a>
+
+        {{-- Tentang (mobile, accordion) --}}
+        <div x-data="{ openTentang: false }">
+            <button @click="openTentang = !openTentang"
+                class="w-full flex justify-between items-center px-4 py-3 rounded-xl {{ request()->routeIs('profil', 'struktur-organisasi') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80' }}">
+                Tentang
+                <span class="material-symbols-outlined transition-transform" :class="openTentang ? 'rotate-180' : ''">expand_more</span>
+            </button>
+            <div x-show="openTentang" x-transition class="pl-4 flex flex-col gap-2 mt-2" style="display: none;">
+                <a href="{{ route('profil') }}" class="block px-4 py-2 text-white/70 hover:text-[#ba9e6f]">Profil & Sejarah</a>
+                <a href="{{ route('struktur-organisasi') }}" class="block px-4 py-2 text-white/70 hover:text-[#ba9e6f]">Struktur Organisasi</a>
+            </div>
+        </div>
+
         <a href="{{ route('agenda') }}"
             class="block px-4 py-3 rounded-xl {{ request()->routeIs('agenda') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80 hover:bg-white/5' }}">
             Program
         </a>
-        <a href="{{ route('layanan') }}"
-            class="block px-4 py-3 rounded-xl {{ request()->routeIs('layanan') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80 hover:bg-white/5' }}">
-            Layanan
-        </a>
+
+        {{-- Layanan (mobile, accordion) --}}
+        <div x-data="{ openLayanan: false }">
+            <button @click="openLayanan = !openLayanan"
+                class="w-full flex justify-between items-center px-4 py-3 rounded-xl {{ request()->routeIs('layanan') ? 'bg-[#ba9e6f]/20 text-[#ba9e6f] font-bold' : 'text-white/80' }}">
+                Layanan
+                <span class="material-symbols-outlined transition-transform" :class="openLayanan ? 'rotate-180' : ''">expand_more</span>
+            </button>
+            <div x-show="openLayanan" x-transition class="pl-4 flex flex-col gap-2 mt-2" style="display: none;">
+                <a href="{{ route('layanan') }}" class="block px-4 py-2 text-white/70 hover:text-[#ba9e6f]">Download Center</a>
+            </div>
+        </div>
         <a href="{{ route('login') }}"
             class="block w-full text-center px-6 py-3 bg-[#ba9e6f] text-[#08332c] rounded-xl font-bold hover:bg-[#d4bc91]">
             Login Pengurus

@@ -29,6 +29,21 @@
 
 
 
+            <!-- Card: Periode Kepengurusan -->
+            <div
+                class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all group">
+                <div
+                    class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 group-hover:scale-110 transition-transform">
+                    <span class="material-symbols-outlined text-2xl">event_repeat</span>
+                </div>
+                <h3 class="font-bold text-lg mb-2 text-slate-800 dark:text-white">Periode Kepengurusan</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Set periode aktif untuk nomor surat (IPNU/IPPNU).</p>
+                <a href="{{ route('dashboard.sekretariat.master-data.periode.index') }}"
+                    class="inline-flex items-center text-sm font-bold text-indigo-600 hover:text-indigo-700">
+                    Kelola Data <span class="material-symbols-outlined text-base ml-1">arrow_forward</span>
+                </a>
+            </div>
+
             <!-- Card: Inventaris -->
             <div
                 class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-all group">

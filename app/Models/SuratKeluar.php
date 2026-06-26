@@ -19,6 +19,16 @@ class SuratKeluar extends Model
         'tgl_surat',
         'file_arsip',
         'pembuat_id',
+        'organisasi_id',
+        'jenis_surat',
+        'jenis_organisasi',
+        'kode_indeks',
+        'program_kerja_id',
+        'nama_kepanitiaan',
+        'nomor_urut',
+        'nomor_urut_pasangan',
+        'status_arsip',
+        'status',
     ];
 
     protected $casts = [
@@ -33,5 +43,15 @@ class SuratKeluar extends Model
     public function pembuat()
     {
         return $this->belongsTo(User::class, 'pembuat_id');
+    }
+
+    public function organisasi()
+    {
+        return $this->belongsTo(Organisasi::class);
+    }
+
+    public function programKerja()
+    {
+        return $this->belongsTo(ProgramKerja::class);
     }
 }

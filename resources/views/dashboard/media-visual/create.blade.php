@@ -34,7 +34,7 @@
                        @change="previewImage">
                 <div class="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2" x-show="!imageUrl">
                     <span class="material-symbols-outlined text-4xl" style="color: var(--dp-border-strong);">add_photo_alternate</span>
-                    <span class="text-xs" style="color: var(--dp-text-secondary);">Upload gambar 1920x1080 &middot; Maks 3MB</span>
+                    <span class="text-xs" style="color: var(--dp-text-secondary);">Upload gambar 1920x640 (rasio memanjang) &middot; Maks 3MB</span>
                 </div>
                 <img :src="imageUrl" class="absolute inset-0 w-full h-full object-cover z-10" x-show="imageUrl" style="display:none;">
                 <div class="absolute inset-0 z-20 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" x-show="imageUrl" style="display:none;">

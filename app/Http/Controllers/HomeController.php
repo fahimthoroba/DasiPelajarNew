@@ -300,7 +300,7 @@ class HomeController extends Controller
         $targetKategori = strtoupper($tab);
         $orgName = ($tab === 'ippnu') ? 'IPPNU' : 'IPNU';
 
-        $allPengurus = Pengurus::with('kader', 'departemenData')
+        $allPengurus = Pengurus::with('kader', 'departemenData', 'sk')
             ->where('tingkatan', 'Cabang')
             ->where('kategori', $targetKategori)
             ->where('is_active', true)
@@ -370,11 +370,10 @@ class HomeController extends Controller
                 });
         }
 
-        // Periode dari SK
-        $periode = '2024-2026';
-        $sk = \App\Models\SuratKeputusan::latest()->first();
-        if ($sk && $sk->tgl_berlaku && $sk->tgl_selesai) {
-            $periode = Carbon::parse($sk->tgl_berlaku)->format('Y') . '-' . Carbon::parse($sk->tgl_selesai)->format('Y');
+        // Periode dari SK milik Ketua Cabang yang sedang ditampilkan
+        $periode = '2024-2026'; // fallback jika Ketua tidak ada SK
+        if ($ketua && $ketua->sk && $ketua->sk->tgl_berlaku && $ketua->sk->tgl_selesai) {
+            $periode = Carbon::parse($ketua->sk->tgl_berlaku)->format('Y') . '-' . Carbon::parse($ketua->sk->tgl_selesai)->format('Y');
         }
 
         return view('struktur-organisasi', compact(

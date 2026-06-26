@@ -20,6 +20,9 @@ class ProgramKerja extends Model
         'departemen_id',
         'tgl_pelaksanaan',
         'penanggung_jawab',
+        'tipe_pelaksanaan',
+        'penanggung_jawab_pengurus_id',
+        'kode_surat_kepanitiaan',
         'path_lpj',
         'status_lpj',
         'status_pelaksanaan',
@@ -42,6 +45,16 @@ class ProgramKerja extends Model
     public function kepanitiaans()
     {
         return $this->hasMany(Kepanitiaan::class);
+    }
+
+    public function penanggungJawabPengurus()
+    {
+        return $this->belongsTo(Pengurus::class, 'penanggung_jawab_pengurus_id');
+    }
+
+    public function catatanFiles()
+    {
+        return $this->hasMany(ProkerCatatanFile::class)->latest();
     }
 
     public function absensis()
@@ -73,7 +86,11 @@ class ProgramKerja extends Model
 
     public function isStep1Complete(): bool
     {
-        return $this->kepanitiaans()->count() > 0;
+        return match ($this->tipe_pelaksanaan) {
+            'kepanitiaan' => $this->kepanitiaans()->count() > 0,
+            'penanggung_jawab' => !empty($this->penanggung_jawab_pengurus_id),
+            default => false,
+        };
     }
 
     public function isStep2Locked(): bool

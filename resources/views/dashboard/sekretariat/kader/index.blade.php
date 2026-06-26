@@ -61,7 +61,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex items-center justify-end gap-2">
-                                        <a href="#" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
+                                        <a href="{{ route('dashboard.sekretariat.kader.edit', $member->id) }}" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
                                             <span class="material-symbols-outlined text-lg">edit</span>
                                         </a>
                                     </div>

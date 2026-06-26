@@ -105,7 +105,7 @@
             @if($sliders->count())
             <section class="mt-6 mb-8">
                 <div class="rounded-lg overflow-hidden" style="border: 1px solid var(--dp-border);">
-                    <div class="swiper mySwiperBerita w-full aspect-[16/9] md:aspect-[3/1]">
+                    <div class="swiper mySwiperBerita w-full aspect-[3/1]">
                         <div class="swiper-wrapper">
                             @foreach($sliders as $slider)
                                 <div class="swiper-slide relative w-full h-full">
@@ -143,7 +143,7 @@
                     <a href="{{ route('berita.show', $main->slug) }}"
                         class="md:col-span-2 md:row-span-2 group rounded-lg overflow-hidden relative block"
                         style="border: 1px solid var(--dp-border);">
-                        <div class="aspect-[4/3] md:aspect-auto md:h-full">
+                        <div class="aspect-[4/3]">
                             <img src="{{ $main->thumbnail ? asset('storage/' . $main->thumbnail) : 'https://placehold.co/800x600/08332c/ba9e6f?text=DASI+Pelajar' }}"
                                 alt="{{ $main->judul }}"
                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -191,7 +191,7 @@
             @endif
 
             {{-- Leaderboard Banner --}}
-            @if(isset($banners['leaderboard_berita']) && $banners['leaderboard_berita']->is_active)
+            @if(isset($banners['leaderboard_berita']) && $banners['leaderboard_berita']->is_active && $banners['leaderboard_berita']->gambar_path)
             <section class="mb-10">
                 @php $lb = $banners['leaderboard_berita']; @endphp
                 @if($lb->link_url)
@@ -299,16 +299,16 @@
 
                         {{-- Banner Antara Kategori --}}
                         @if($loop->iteration % 2 === 0 && !$loop->last)
-                        @if(isset($banners['between_categories']) && $banners['between_categories']->is_active)
+                        @if(isset($banners['between_categories']) && $banners['between_categories']->is_active && $banners['between_categories']->gambar_path)
                         <section class="mb-10">
                             @php $bc = $banners['between_categories']; @endphp
                             @if($bc->link_url)
                                 <a href="{{ $bc->link_url }}" target="_blank" rel="noopener" class="block rounded-lg overflow-hidden">
-                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full object-cover" style="max-height: 70px;" loading="lazy">
+                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full aspect-[728/70] object-cover" loading="lazy">
                                 </a>
                             @else
                                 <div class="rounded-lg overflow-hidden">
-                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full object-cover" style="max-height: 70px;" loading="lazy">
+                                    <img src="{{ asset('storage/'.$bc->gambar_path) }}" alt="Banner" class="w-full aspect-[728/70] object-cover" loading="lazy">
                                 </div>
                             @endif
                         </section>
@@ -418,15 +418,15 @@
                     </div>
 
                     {{-- Sidebar Banner --}}
-                    @if(isset($banners['sidebar_berita']) && $banners['sidebar_berita']->is_active)
+                    @if(isset($banners['sidebar_berita']) && $banners['sidebar_berita']->is_active && $banners['sidebar_berita']->gambar_path)
                     @php $sb = $banners['sidebar_berita']; @endphp
                     @if($sb->link_url)
-                        <a href="{{ $sb->link_url }}" target="_blank" rel="noopener" class="block rounded-lg overflow-hidden" style="min-height: 250px;">
-                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full object-cover" loading="lazy">
+                        <a href="{{ $sb->link_url }}" target="_blank" rel="noopener" class="block rounded-lg overflow-hidden">
+                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full aspect-[300/250] object-cover" loading="lazy">
                         </a>
                     @else
-                        <div class="rounded-lg overflow-hidden" style="min-height: 250px;">
-                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full object-cover" loading="lazy">
+                        <div class="rounded-lg overflow-hidden">
+                            <img src="{{ asset('storage/'.$sb->gambar_path) }}" alt="Banner" class="w-full aspect-[300/250] object-cover" loading="lazy">
                         </div>
                     @endif
                     @endif

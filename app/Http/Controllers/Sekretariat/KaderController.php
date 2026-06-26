@@ -58,7 +58,8 @@ class KaderController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $kader = Kader::findOrFail($id);
+        return view('dashboard.sekretariat.kader.edit', compact('kader'));
     }
 
     /**
@@ -66,7 +67,20 @@ class KaderController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $kader = Kader::findOrFail($id);
+
+        $validated = $request->validate([
+            'quote' => 'nullable|string|max:255',
+            'foto_path' => 'nullable|image|max:2048',
+        ]);
+
+        if ($request->hasFile('foto_path')) {
+            $validated['foto_path'] = $request->file('foto_path')->store('kader-photos', 'public');
+        }
+
+        $kader->update($validated);
+
+        return redirect()->route('dashboard.sekretariat.kader.index')->with('success', 'Profil Kader berhasil diperbarui.');
     }
 
     /**

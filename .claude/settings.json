@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://127.0.0.1:8123/\")",
+      "Bash(php -r ' *)",
+      "Bash(powershell -Command 'Get-Process -Name php -ErrorAction SilentlyContinue | Where-Object {$_.CommandLine -like '\\\\''*8123*'\\\\''} | Stop-Process -Force')",
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq*8123*\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //F //PID 7100)",
+      "Bash(php -l app/Http/Controllers/HomeController.php)",
+      "Bash(curl -s \"http://127.0.0.1:8123/\")",
+      "Bash(curl -s \"http://127.0.0.1:8123/struktur-organisasi?tab=ipnu\")",
+      "Bash(curl -s \"http://127.0.0.1:8123/struktur-organisasi?tab=ippnu\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://127.0.0.1:8123/profil\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://127.0.0.1:8123/layanan\")",
+      "Bash(grep -n \"Lembaga Sections\\\\|@endif\\\\s*$\\\\|<\\\\/div>\\\\s*$\\\\|@else\\\\|Empty state\\\\|@endif$\" \"c:/xampp/htdocs/APP/DasiPelajar_DEV/resources/views/struktur-organisasi.blade.php\")",
+      "Bash(curl -s \"http://127.0.0.1:8123/struktur-organisasi?tab=ipnu\" -o /tmp/struktur_out.html)"
+    ],
+    "additionalDirectories": [
+      "C:\\Brain\\Brain\\Brain\\30.Projects\\DasiPelajar"
+    ]
+  }
+}

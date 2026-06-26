@@ -73,8 +73,15 @@ Route::middleware(['auth'])->group(function () {
     // Sekretariat Modules
     Route::group(['prefix' => 'dashboard/sekretariat', 'as' => 'dashboard.sekretariat.'], function () {
         Route::get('/master-data', [\App\Http\Controllers\Sekretariat\MasterDataController::class, 'index'])->name('master-data.index');
+
+        // Periode Kepengurusan (Manajemen Nomor Surat — Flow B) — eksklusif Sekretaris/Admin
+        Route::group(['middleware' => 'role:sekretaris,admin'], function () {
+            Route::get('/master-data/periode', [\App\Http\Controllers\Sekretariat\PeriodeKepengurusanController::class, 'index'])->name('master-data.periode.index');
+            Route::post('/master-data/periode', [\App\Http\Controllers\Sekretariat\PeriodeKepengurusanController::class, 'store'])->name('master-data.periode.store');
+        });
         Route::resource('surat-masuk', \App\Http\Controllers\Sekretariat\SuratMasukController::class);
         Route::resource('surat-keluar', \App\Http\Controllers\Sekretariat\SuratKeluarController::class);
+        Route::post('surat-keluar/{id}/batalkan', [\App\Http\Controllers\Sekretariat\SuratKeluarController::class, 'batalkan'])->name('surat-keluar.batalkan');
 
         // Master Data Resources
         Route::resource('kader', \App\Http\Controllers\Sekretariat\KaderController::class);
@@ -112,6 +119,10 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/proker/{id}/agenda/{agendaId}', [\App\Http\Controllers\Departemen\ProgramKerjaController::class, 'destroyAgenda'])->name('proker.agenda.destroy');
 
         Route::post('/proker/{id}/lpj', [\App\Http\Controllers\Departemen\ProgramKerjaController::class, 'updateLpj'])->name('proker.lpj.update');
+
+        // Jalur Penanggung Jawab (Tahap 3)
+        Route::post('/proker/{id}/tandai-selesai', [\App\Http\Controllers\Departemen\ProgramKerjaController::class, 'tandaiSelesai'])->name('proker.tandai-selesai');
+        Route::post('/proker/{id}/catatan', [\App\Http\Controllers\Departemen\ProgramKerjaController::class, 'storeCatatan'])->name('proker.catatan.store');
     });
 
     // PAC Modules
