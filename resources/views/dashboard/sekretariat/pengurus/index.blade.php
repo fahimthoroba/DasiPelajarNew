@@ -204,6 +204,7 @@
                                 <div><input type="date" name="pengurus[{{ $pKey }}_sek][dob]" value="{{ $sek?->kader->tanggal_lahir }}" class="input-field text-xs !py-1" title="Tgl Lahir"></div>
                             </div>
                         </div>
+                        
                     </div>
                     <div>
                         <label class="badge-role bg-amber-100 text-amber-800">Bendahara</label>

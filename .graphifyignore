@@ -1,0 +1,12 @@
+# Aset pihak ketiga hasil publish (Filament, TinyMCE) — bukan kode proyek
+public/js/
+public/vendor/
+public/build/
+
+# Dump database & output graphify sendiri
+*.sql
+graphify-out/
+
+# Catatan non-kode
+DariDev/
+DokumentasiNew/
